@@ -43,7 +43,8 @@ func RunCommand(conn Conn, namespace string, cmd Doc, result interface{}) os.Err
 // LastError is deprecated. Use Database{Conn: conn, Name: dbname}.LastError(cmd) instead.
 func LastError(conn Conn, namespace string, cmd interface{}) os.Error {
 	dbname, _ := SplitNamespace(namespace)
-	return Database{Conn: conn, Name: dbname}.LastError(cmd)
+	_, err := Database{Conn: conn, Name: dbname}.LastError(cmd)
+	return err
 }
 
 // commandNamespace returns the command namespace give a database name or
@@ -83,7 +84,8 @@ func (c SafeConn) checkError(namespace string, err os.Error) os.Error {
 		return err
 	}
 	dbname, _ := SplitNamespace(namespace)
-	return Database{Conn: c.Conn, Name: dbname}.LastError(c.Cmd)
+	_, err = Database{Conn: c.Conn, Name: dbname}.LastError(c.Cmd)
+	return err
 }
 
 func (c SafeConn) Update(namespace string, selector, update interface{}, options *UpdateOptions) os.Error {

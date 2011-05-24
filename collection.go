@@ -22,6 +22,8 @@ import (
 
 var DefaultLastErrorCmd interface{} = map[string]int{"getLastError": 1}
 
+var ErrNotFound = os.NewError("mongo: not found")
+
 var (
 	upsertOptions      = &UpdateOptions{Upsert: true}
 	updateAllOptions   = &UpdateOptions{Multi: true}
@@ -58,46 +60,60 @@ func (c Collection) Db() Database {
 	}
 }
 
-func (c Collection) checkError(err os.Error) os.Error {
+func (c Collection) checkError(err os.Error) (*MongoError, os.Error) {
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if c.LastErrorCmd == nil {
-		return nil
+		return nil, nil
 	}
 	return c.Db().LastError(c.LastErrorCmd)
 }
 
 // Insert adds document to the collection.
 func (c Collection) Insert(documents ...interface{}) os.Error {
-	return c.checkError(c.Conn.Insert(c.Namespace, documents...))
+	_, err := c.checkError(c.Conn.Insert(c.Namespace, documents...))
+	return err
 }
 
 // Update updates the first document in the collection found by selector with
-// update.
+// update. If a matching document is not found, then mongo.ErrNotFound is
+// returned.
 func (c Collection) Update(selector, update interface{}) os.Error {
-	return c.checkError(c.Conn.Update(c.Namespace, selector, update, nil))
+	merr, err := c.checkError(c.Conn.Update(c.Namespace, selector, update, nil))
+	if merr != nil && err == nil && !merr.Updated {
+		err = ErrNotFound
+	}
+	return err
+}
+
+// UpdateAll updates all documents matching selector with update. If no
+// matching documents are found, then mongo.ErrNotFound is returned.
+func (c Collection) UpdateAll(selector interface{}, update interface{}) os.Error {
+	merr, err := c.checkError(c.Conn.Update(c.Namespace, selector, update, updateAllOptions))
+	if merr != nil && err == nil && !merr.Updated {
+		err = ErrNotFound
+	}
+	return err
 }
 
 // Upsert updates the first document found by selector with update. If no 
 // document is found, then the update is inserted instead.
 func (c Collection) Upsert(selector interface{}, update interface{}) os.Error {
-	return c.checkError(c.Conn.Update(c.Namespace, selector, update, upsertOptions))
-}
-
-// UpdateAll updates all documents matching selector with update.
-func (c Collection) UpdateAll(selector interface{}, update interface{}) os.Error {
-	return c.checkError(c.Conn.Update(c.Namespace, selector, update, updateAllOptions))
+	_, err := c.checkError(c.Conn.Update(c.Namespace, selector, update, upsertOptions))
+	return err
 }
 
 // RemoveFirst removes the first document found by selector.
 func (c Collection) RemoveFirst(selector interface{}) os.Error {
-	return c.checkError(c.Conn.Remove(c.Namespace, selector, removeFirstOptions))
+	_, err := c.checkError(c.Conn.Remove(c.Namespace, selector, removeFirstOptions))
+	return err
 }
 
 // Remove removes all documents found by selector.
 func (c Collection) Remove(selector interface{}) os.Error {
-	return c.checkError(c.Conn.Remove(c.Namespace, selector, nil))
+	_, err := c.checkError(c.Conn.Remove(c.Namespace, selector, nil))
+	return err
 }
 
 // Find returns a query object for the given filter. 

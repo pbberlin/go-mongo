@@ -18,6 +18,65 @@ import (
 	"testing"
 )
 
+func TestUpdate(t *testing.T) {
+	c := dialAndDrop(t, "go-mongo-test", "test")
+	defer c.Conn.Close()
+
+	id := NewObjectId()
+	err := c.Insert(M{"_id": id, "x": 1})
+	if err != nil {
+		t.Fatal("insert", err)
+	}
+
+	err = c.Update(M{"_id": id}, M{"$inc": M{"x": 1}})
+	if err != nil {
+		t.Fatal("update", err)
+	}
+
+	var m M
+	err = c.Find(M{"_id": id}).One(&m)
+	if err != nil {
+		t.Fatal("findone after update", err)
+	}
+
+	if m["x"] != 2 {
+		t.Error("expect x = 2, got", m["x"])
+	}
+
+	err = c.Update(M{"_id": "junk"}, M{"$inc": M{"x": 1}})
+	if err != ErrNotFound {
+		t.Error("update, expected NotFound, got", err)
+	}
+
+	err = c.UpdateAll(M{"_id": "junk"}, M{"$inc": M{"x": 1}})
+	if err != ErrNotFound {
+		t.Error("updateall, expected NotFound, got", err)
+	}
+}
+
+func TestRemove(t *testing.T) {
+	c := dialAndDrop(t, "go-mongo-test", "test")
+	defer c.Conn.Close()
+
+	id := NewObjectId()
+	err := c.Insert(M{"_id": id, "x": 1})
+	if err != nil {
+		t.Fatal("insert", err)
+	}
+
+	err = c.Remove(M{"_id": id})
+	if err != nil {
+		t.Fatal("remove", err)
+	}
+
+	var m M
+	err = c.Find(M{"_id": id}).One(&m)
+	if err != EOF {
+		t.Fatal("findone, expect EOF, got", err)
+	}
+}
+
+
 func TestFindAndModify(t *testing.T) {
 
 	c := dialAndDrop(t, "go-mongo-test", "test")

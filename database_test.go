@@ -15,7 +15,7 @@ func TestLastError(t *testing.T) {
 		c.Insert(M{"_id": id})
 	}
 
-	err := c.Db().LastError(nil)
+	_, err := c.Db().LastError(nil)
 	if err, ok := err.(*MongoError); !ok {
 		t.Fatalf("expected error, got %+v", err)
 	} else if err.Code == 0 {

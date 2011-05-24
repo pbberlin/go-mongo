@@ -34,9 +34,11 @@ func SplitNamespace(s string) (string, string) {
 
 // MongoError represents an error for the connection mutation operations.
 type MongoError struct {
-	Err  string "err"
-	N    int    "n"
-	Code int    "code"
+	Err        string      "err"
+	N          int         "n"
+	Code       int         "code"
+	Updated    bool        "updatedExisting"
+	UpsertedId interface{} "upserted"
 }
 
 func (e *MongoError) String() string {
@@ -125,29 +127,29 @@ func (db Database) Run(cmd interface{}, result interface{}) os.Error {
 // More information:
 //
 //  http://www.mongodb.org/display/DOCS/Last+Error+Commands
-func (db Database) LastError(cmd interface{}) os.Error {
+func (db Database) LastError(cmd interface{}) (*MongoError, os.Error) {
 	if cmd == nil {
 		cmd = DefaultLastErrorCmd
 	}
-	cursor, err := db.Conn.Find(db.Name+".$cmd", cmd, runFindOptions)
-	if err != nil {
-		return err
-	}
-	defer cursor.Close()
 	var r struct {
 		CommandResponse
 		MongoError
 	}
+	cursor, err := db.Conn.Find(db.Name+".$cmd", cmd, runFindOptions)
+	if err != nil {
+		return &r.MongoError, err
+	}
+	defer cursor.Close()
 	if err := cursor.Next(&r); err != nil {
-		return err
+		return &r.MongoError, err
 	}
 	if err := r.CommandResponse.Error(); err != nil {
-		return err
+		return &r.MongoError, err
 	}
 	if r.MongoError.Err != "" {
-		return &r.MongoError
+		return &r.MongoError, &r.MongoError
 	}
-	return nil
+	return &r.MongoError, nil
 }
 
 // DBRef is a reference to a document in a database. Use the Database
