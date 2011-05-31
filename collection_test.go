@@ -71,7 +71,7 @@ func TestRemove(t *testing.T) {
 
 	var m M
 	err = c.Find(M{"_id": id}).One(&m)
-	if err != EOF {
+	if err != Done {
 		t.Fatal("findone, expect EOF, got", err)
 	}
 }
@@ -120,7 +120,7 @@ func TestFindAndModify(t *testing.T) {
 
 	m = nil
 	err = c.Find(M{"_id": "users"}).One(&m)
-	if err != EOF {
+	if err != Done {
 		t.Fatal("findone, expect EOF, got", err)
 	}
 }

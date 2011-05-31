@@ -27,8 +27,7 @@ import (
 )
 
 var (
-	// No more data in cursor.
-	EOF = os.NewError("mongo: eof")
+	Done = os.NewError("mongo: cursor has no more results")
 )
 
 // RemoveOptions specifies options for the Conn.Remove method.

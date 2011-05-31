@@ -18,6 +18,9 @@ import (
 	"os"
 )
 
+// No more data in cursor.
+var EOF = Done
+
 // Doc is deprecated. Use D instead.
 type Doc []DocItem
 

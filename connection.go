@@ -529,7 +529,7 @@ func (r *cursor) HasNext() bool {
 	// Next().
 
 	if r.err != nil {
-		return r.err != EOF
+		return r.err != Done
 	}
 
 	if len(r.docs) > 0 || r.conn.cursor == r {
@@ -538,7 +538,7 @@ func (r *cursor) HasNext() bool {
 
 	if r.requestId == 0 {
 		if r.cursorId == 0 {
-			r.fatal(EOF)
+			r.fatal(Done)
 			return false
 		}
 		if err := r.conn.getMore(r); err != nil {
@@ -557,11 +557,11 @@ func (r *cursor) HasNext() bool {
 
 	switch {
 	case r.err != nil:
-		return r.err != EOF
+		return r.err != Done
 	case r.conn.cursor == r:
 		return true
 	case r.cursorId == 0:
-		r.fatal(EOF)
+		r.fatal(Done)
 		return false
 	}
 
@@ -571,7 +571,7 @@ func (r *cursor) HasNext() bool {
 
 func (r *cursor) Next(value interface{}) os.Error {
 	if !r.HasNext() {
-		return EOF
+		return Done
 	}
 
 	if r.err != nil {
@@ -598,7 +598,7 @@ func (r *cursor) Next(value interface{}) os.Error {
 
 	r.count += 1
 	if r.limit > 0 && r.count >= r.limit {
-		r.fatal(EOF)
+		r.fatal(Done)
 	}
 
 	return err
