@@ -59,6 +59,8 @@ type Regexp struct {
 type ObjectId string
 
 
+// String returns the hexadecimal encoding of id. Use the function
+// NewObjectIdHex to convert the string back to an object id.
 func (id ObjectId) String() string {
 	return hex.EncodeToString([]byte(string(id)))
 }
@@ -93,7 +95,7 @@ func NewObjectId() ObjectId {
 	return newObjectId(time.Seconds(), nextOidCounter())
 }
 
-// NewObjectIdString returns an object id initialized from the hexadecimal
+// NewObjectIdHex returns an object id initialized from the hexadecimal
 // encoding of the object id.
 func NewObjectIdHex(hexString string) (ObjectId, os.Error) {
 	p, err := hex.DecodeString(hexString)
