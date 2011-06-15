@@ -147,7 +147,11 @@ func (d *decodeState) scanSlice(n int) []byte {
 }
 
 func (d *decodeState) scanKindName() (int, []byte) {
-	kind := int(d.scanSlice(1)[0])
+	if d.offset >= len(d.data) {
+		abort(ErrEOD)
+	}
+	kind := int(d.data[d.offset])
+	d.offset += 1
 	if kind == 0 {
 		return 0, nil
 	}
