@@ -136,6 +136,15 @@ func (d *decodeState) endDoc(offset int) {
 	}
 }
 
+func (d *decodeState) scanByte() byte {
+	if d.offset >= len(d.data) {
+		abort(ErrEOD)
+	}
+	b := d.data[d.offset]
+	d.offset += 1
+	return b
+}
+
 func (d *decodeState) scanSlice(n int) []byte {
 	offset := d.offset + n
 	if offset > len(d.data) {
@@ -147,11 +156,7 @@ func (d *decodeState) scanSlice(n int) []byte {
 }
 
 func (d *decodeState) scanKindName() (int, []byte) {
-	if d.offset >= len(d.data) {
-		abort(ErrEOD)
-	}
-	kind := int(d.data[d.offset])
-	d.offset += 1
+	kind := int(d.scanByte())
 	if kind == 0 {
 		return 0, nil
 	}
@@ -177,16 +182,12 @@ func (d *decodeState) scanString() string {
 
 func (d *decodeState) scanBinary() ([]byte, int) {
 	n := int(wire.Uint32(d.scanSlice(4)))
-	subtype := int(d.scanSlice(1)[0])
+	subtype := int(d.scanByte())
 	return d.scanSlice(n), subtype
 }
 
-func (d *decodeState) scanObjectId() []byte {
-	return d.scanSlice(12)
-}
-
 func (d *decodeState) scanBool() bool {
-	b := d.scanSlice(1)[0]
+	b := d.scanByte()
 	if b == 0 {
 		return false
 	}
