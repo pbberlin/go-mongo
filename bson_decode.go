@@ -15,7 +15,6 @@
 package mongo
 
 import (
-	"bytes"
 	"math"
 	"os"
 	"reflect"
@@ -160,13 +159,15 @@ func (d *decodeState) scanKindName() (int, []byte) {
 	if kind == 0 {
 		return 0, nil
 	}
-	n := bytes.IndexByte(d.data[d.offset:], 0)
-	if n < 0 {
-		abort(ErrEOD)
-	}
-	p := d.data[d.offset : d.offset+n]
-	d.offset = d.offset + n + 1
-	return kind, p
+    for i, b := range(d.data[d.offset:]) {
+        if b == 0 {
+            name := d.data[d.offset:d.offset+i]
+            d.offset += i + 1
+            return kind, name
+        }
+    }
+    abort(ErrEOD)
+    panic("unreachable")
 }
 
 func (d *decodeState) scanFloat() float64 {
