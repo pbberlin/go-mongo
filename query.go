@@ -69,9 +69,7 @@ func (q *Query) Sort(sort interface{}) *Query {
 // Hint specifies an index hint. The index is specified by (key, direction)
 // pairs. Direction is 1 for ascending order and -1 for descending order.
 //
-// More information:
-//
-//  http://www.mongodb.org/display/DOCS/Optimization#Optimization-Hint
+// More information: http://www.mongodb.org/display/DOCS/Optimization#Optimization-Hint
 func (q *Query) Hint(hint interface{}) *Query {
 	q.Spec.Hint = hint
 	return q
@@ -79,9 +77,7 @@ func (q *Query) Hint(hint interface{}) *Query {
 
 // Limit specifies the number of documents to return from the query.
 //
-// More information:
-//
-//  http://www.mongodb.org/display/DOCS/Advanced+Queries#AdvancedQueries-%7B%7Blimit%28%29%7D%7D
+// More information: http://www.mongodb.org/display/DOCS/Advanced+Queries#AdvancedQueries-%7B%7Blimit%28%29%7D%7D
 func (q *Query) Limit(limit int) *Query {
 	q.Options.Limit = limit
 	return q
@@ -90,9 +86,7 @@ func (q *Query) Limit(limit int) *Query {
 // Skip specifies the number of documents the server should skip at the
 // beginning of the result set.
 //
-// More information:
-//
-//  http://www.mongodb.org/display/DOCS/Advanced+Queries#AdvancedQueries-%7B%7Bskip%28%29%7D%7D
+// More information: http://www.mongodb.org/display/DOCS/Advanced+Queries#AdvancedQueries-%7B%7Bskip%28%29%7D%7D
 func (q *Query) Skip(skip int) *Query {
 	q.Options.Skip = skip
 	return q
@@ -109,9 +103,7 @@ func (q *Query) BatchSize(batchSize int) *Query {
 // more elements, each of which is the name of a field that should be returned,
 // and the integer value 1. 
 //
-// More information:
-//
-//  http://www.mongodb.org/display/DOCS/Retrieving+a+Subset+of+Fields
+// More information: http://www.mongodb.org/display/DOCS/Retrieving+a+Subset+of+Fields
 func (q *Query) Fields(fields interface{}) *Query {
 	q.Options.Fields = fields
 	return q
@@ -119,9 +111,7 @@ func (q *Query) Fields(fields interface{}) *Query {
 
 // SlaveOk specifies if query can be routed to a slave.
 //
-// More information:
-//
-//  http://www.mongodb.org/display/DOCS/Querying#Querying-slaveOk
+// More information: http://www.mongodb.org/display/DOCS/Querying#Querying-slaveOk
 func (q *Query) SlaveOk(slaveOk bool) *Query {
 	q.Options.SlaveOk = slaveOk
 	return q
@@ -146,9 +136,7 @@ func (q *Query) Exhaust(exhaust bool) *Query {
 // Tailable specifies if the server should not close the cursor when no more
 // data is available.
 // 
-// More informatoin:
-//
-//  http://www.mongodb.org/display/DOCS/Tailable+Cursors
+// More information: http://www.mongodb.org/display/DOCS/Tailable+Cursors
 func (q *Query) Tailable(tailable bool) *Query {
 	q.Options.Tailable = tailable
 	return q
@@ -249,9 +237,7 @@ func (q *Query) Fill(slice interface{}) (n int, err os.Error) {
 
 // Explain returns an explanation of how the server will execute the query.
 //
-// More information:
-//
-//  http://www.mongodb.org/display/DOCS/Optimization#Optimization-Explain
+// More information: http://www.mongodb.org/display/DOCS/Optimization#Optimization-Explain
 func (q *Query) Explain(result interface{}) os.Error {
 	spec := q.Spec
 	spec.Explain = true
@@ -270,9 +256,7 @@ func (q *Query) Explain(result interface{}) os.Error {
 // Distinct returns the distinct value for key among the docouments in the
 // result set for this query.
 //
-// More information:
-//
-//  http://www.mongodb.org/display/DOCS/Aggregation#Aggregation-Distinct
+// More information: http://www.mongodb.org/display/DOCS/Aggregation#Aggregation-Distinct
 func (q *Query) Distinct(key interface{}, result interface{}) os.Error {
 	dbname, cname := SplitNamespace(q.Namespace)
 	cmd := D{{"distinct", cname}}

@@ -151,9 +151,7 @@ func IndexName(keys D) string {
 
 // IndexOptions specifies options for the collection CreateIndex method.
 //
-// More information:
-//
-//  http://www.mongodb.org/display/DOCS/Indexes
+// More information: http://www.mongodb.org/display/DOCS/Indexes
 type IndexOptions struct {
 	// Custom name for this index. If none specified, then a name will be generated.
 	Name string "name"
@@ -178,9 +176,7 @@ type IndexOptions struct {
 
 // CreateIndex creates an index on keys.
 // 
-// More information:
-// 
-//  http://www.mongodb.org/display/DOCS/Indexes
+// More information: http://www.mongodb.org/display/DOCS/Indexes
 func (c Collection) CreateIndex(keys D, options *IndexOptions) os.Error {
 	index := struct {
 		Keys      D      "key"
@@ -227,9 +223,7 @@ type FindAndModifyOptions struct {
 // operator update. FindAndUpdate is a wrapper around the MongoDB findAndModify
 // command.
 //
-// More information:
-//
-//  http://www.mongodb.org/display/DOCS/findAndModify+Command
+// More information: http://www.mongodb.org/display/DOCS/findAndModify+Command
 func (c Collection) FindAndUpdate(selector, update interface{}, options *FindAndModifyOptions, result interface{}) os.Error {
 	_, name := SplitNamespace(c.Namespace)
 	cmd := struct {
@@ -251,9 +245,7 @@ func (c Collection) FindAndUpdate(selector, update interface{}, options *FindAnd
 // FindAndRemove removes and returns a document specified by selector.
 // FindAndRemove is a wrapper around the MongoDB findAndModify command.
 //
-// More information:
-//
-//  http://www.mongodb.org/display/DOCS/findAndModify+Command
+// More information: http://www.mongodb.org/display/DOCS/findAndModify+Command
 func (c Collection) FindAndRemove(selector interface{}, options *FindAndModifyOptions, result interface{}) os.Error {
 	_, name := SplitNamespace(c.Namespace)
 	cmd := struct {
