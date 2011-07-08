@@ -154,24 +154,24 @@ func IndexName(keys D) string {
 // More information: http://www.mongodb.org/display/DOCS/Indexes
 type IndexOptions struct {
 	// Custom name for this index. If none specified, then a name will be generated.
-	Name string "name"
+	Name string `bson:"name"`
 
 	// Should this index guarantee uniqueness?
-	Unique bool "unique/c"
+	Unique bool `bson:"unique/c"`
 
 	// Should duplicates be dropped when creating a unique index?
-	DropDups bool "dropDups/c"
+	DropDups bool `bson:"dropDups/c"`
 
 	// Build index in background.
-	Background bool "background/c"
+	Background bool `bson:"background/c"`
 
 	// Do not index documents with missing key fields.
-	Sparse bool "sparse/c"
+	Sparse bool `bson:"sparse/c"`
 
 	// Geospatial options
-	Min  interface{} "min"
-	Max  interface{} "max"
-	Bits int         "bits/c"
+	Min  interface{} `bson:"min"`
+	Max  interface{} `bson:"max"`
+	Bits int         `bson:"bits/c"`
 }
 
 // CreateIndex creates an index on keys.
@@ -179,8 +179,8 @@ type IndexOptions struct {
 // More information: http://www.mongodb.org/display/DOCS/Indexes
 func (c Collection) CreateIndex(keys D, options *IndexOptions) os.Error {
 	index := struct {
-		Keys      D      "key"
-		Namespace string "ns"
+		Keys      D      `bson:"key"`
+		Namespace string `bson:"ns"`
 		IndexOptions
 	}{
 		Keys:      keys,
@@ -206,17 +206,17 @@ func (c Collection) CreateIndex(keys D, options *IndexOptions) os.Error {
 type FindAndModifyOptions struct {
 	// Set to true if you want to return the modified object rather than the
 	// original. Ignored for remove.
-	New bool "new/c"
+	New bool `bson:"new/c"`
 
 	// Specify subset of fields to return.
-	Fields interface{} "fields"
+	Fields interface{} `bson:"fields"`
 
 	// Create object if it doesn't exist. Ignored for remove.
-	Upsert bool "upsert/c"
+	Upsert bool `bson:"upsert/c"`
 
 	// If multiple docs match, choose the first one in the specified sort order
 	// as the object to update. 
-	Sort interface{} "sort"
+	Sort interface{} `bson:"sort"`
 }
 
 // FindAndUpdate updates and returns a document specified by selector with
@@ -227,9 +227,9 @@ type FindAndModifyOptions struct {
 func (c Collection) FindAndUpdate(selector, update interface{}, options *FindAndModifyOptions, result interface{}) os.Error {
 	_, name := SplitNamespace(c.Namespace)
 	cmd := struct {
-		Collection string      "findAndModify"
-		Selector   interface{} "query"
-		Update     interface{} "update"
+		Collection string      `bson:"findAndModify"`
+		Selector   interface{} `bson:"query"`
+		Update     interface{} `bson:"update"`
 		FindAndModifyOptions
 	}{
 		Collection: name,
@@ -249,9 +249,9 @@ func (c Collection) FindAndUpdate(selector, update interface{}, options *FindAnd
 func (c Collection) FindAndRemove(selector interface{}, options *FindAndModifyOptions, result interface{}) os.Error {
 	_, name := SplitNamespace(c.Namespace)
 	cmd := struct {
-		Collection string      "findAndModify"
-		Selector   interface{} "query"
-		Remove     bool        "remove"
+		Collection string      `bson:"findAndModify"`
+		Selector   interface{} `bson:"query"`
+		Remove     bool        `bson:"remove"`
 		FindAndModifyOptions
 	}{
 		Collection: name,
@@ -273,7 +273,7 @@ func (c Collection) findAndModify(cmd interface{}, result interface{}) os.Error 
 	defer cursor.Close()
 	var r struct {
 		CommandResponse
-		Value BSONData "value"
+		Value BSONData `bson:"value"`
 	}
 	if err := cursor.Next(&r); err != nil {
 		return err

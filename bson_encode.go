@@ -47,12 +47,13 @@ type encodeState struct {
 // Encode traverses the value doc recursively using the following
 // type-dependent encodings:
 //
-// Struct values encode as BSON documents. The struct field tag specifies the
-// encoded name of the field and encoding options. The options follow the name
-// and are proceeded by a '/'. If the name is not specified in the tag, then
-// the field name defaults to the structure field name. Unexported fields and
-// fields equal to nil are not encoded. The following option is supported:
-//
+// Struct values encode as BSON documents. Each exported struct field becomes
+// an element of the document. By default the name of the document element is
+// the struct field name. If the struct field's tag has a "bson" key, that
+// value will be used as the element name.  For example, the field tag
+// `bson:"myName"` says to use "myName" as the element name. The following
+// options are supported in the "bson" key:
+///
 //  /c  If the field is the zero value, then the field is not 
 //      written to the encoding. 
 //

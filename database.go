@@ -34,11 +34,11 @@ func SplitNamespace(s string) (string, string) {
 
 // MongoError represents an error for the connection mutation operations.
 type MongoError struct {
-	Err        string      "err"
-	N          int         "n"
-	Code       int         "code"
-	Updated    bool        "updatedExisting"
-	UpsertedId interface{} "upserted"
+	Err        string      `bson:"err"`
+	N          int         `bson:"n"`
+	Code       int         `bson:"code"`
+	Updated    bool        `bson:"updatedExisting"`
+	UpsertedId interface{} `bson:"upserted"`
 }
 
 func (e *MongoError) String() string {
@@ -48,8 +48,8 @@ func (e *MongoError) String() string {
 // CommandResponse contains the common fields in command responses from the
 // server. 
 type CommandResponse struct {
-	Ok     bool   "ok"
-	Errmsg string "errmsg"
+	Ok     bool   `bson:"ok"`
+	Errmsg string `bson:"errmsg"`
 }
 
 // Error returns the error from the response or nil.
@@ -154,13 +154,13 @@ func (db Database) LastError(cmd interface{}) (*MongoError, os.Error) {
 // More information: http://www.mongodb.org/display/DOCS/Database+References 
 type DBRef struct {
 	// The target document's collection.
-	Collection string "$ref"
+	Collection string `bson:"$ref"`
 
 	// The target document's id.
-	Id ObjectId "$id"
+	Id ObjectId `bson:"$id"`
 
 	// The target document's database (optional).
-	Database string "$db/c"
+	Database string `bson:"$db/c"`
 }
 
 // Deference fetches the document specified by a database reference.

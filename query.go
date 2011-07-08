@@ -30,31 +30,31 @@ type Query struct {
 // QuerySpec is a helper for specifying complex queries.
 type QuerySpec struct {
 	// The filter. This field is required.
-	Query interface{} "$query"
+	Query interface{} `bson:"$query"`
 
 	// Sort order specified by (key, direction) pairs. The direction is 1 for
 	// ascending order and -1 for descending order.
-	Sort interface{} "$orderby"
+	Sort interface{} `bson:"$orderby"`
 
 	// If set to true, then the query returns an explain plan record the query.
 	// See http://www.mongodb.org/display/DOCS/Optimization#Optimization-Explain
-	Explain bool "$explain/c"
+	Explain bool `bson:"$explain/c"`
 
 	// Index hint specified by (key, direction) pairs. 
 	// See http://www.mongodb.org/display/DOCS/Optimization#Optimization-Hint
-	Hint interface{} "$hint"
+	Hint interface{} `bson:"$hint"`
 
 	// Snapshot mode assures that objects which update during the lifetime of a
 	// query are returned once and only once.
 	// See http://www.mongodb.org/display/DOCS/How+to+do+Snapshotted+Queries+in+the+Mongo+Database
-	Snapshot bool "$snapshot/c"
+	Snapshot bool `bson:"$snapshot/c"`
 
 	// Min and Max constrain matches to those having index keys between the min
 	// and max keys specified.The Min value is included in the range and the
 	// Max value is excluded.
 	// See http://www.mongodb.org/display/DOCS/min+and+max+Query+Specifiers
-	Min interface{} "$min"
-	Max interface{} "$max"
+	Min interface{} `bson:"$min"`
+	Max interface{} `bson:"$max"`
 }
 
 
@@ -173,7 +173,7 @@ func (q *Query) Count() (int64, os.Error) {
 	defer cursor.Close()
 	var r struct {
 		CommandResponse
-		N int64 "n"
+		N int64 `bson:"n"`
 	}
 	if err := cursor.Next(&r); err != nil {
 		return 0, err
@@ -270,7 +270,7 @@ func (q *Query) Distinct(key interface{}, result interface{}) os.Error {
 	defer cursor.Close()
 	var r struct {
 		CommandResponse
-		Values BSONData "values"
+		Values BSONData `bson:"values"`
 	}
 	if err := cursor.Next(&r); err != nil {
 		return err

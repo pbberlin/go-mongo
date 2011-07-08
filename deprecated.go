@@ -157,7 +157,7 @@ func findAndModify(conn Conn, namespace string, cmd Doc, options *FindAndModifyO
 	}
 	var r struct {
 		CommandResponse
-		Value BSONData "value"
+		Value BSONData `bson:"value"`
 	}
 	if err := FindOne(conn, commandNamespace(namespace), cmd, nil, &r); err != nil {
 		return err

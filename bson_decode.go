@@ -159,15 +159,15 @@ func (d *decodeState) scanKindName() (int, []byte) {
 	if kind == 0 {
 		return 0, nil
 	}
-    for i, b := range(d.data[d.offset:]) {
-        if b == 0 {
-            name := d.data[d.offset:d.offset+i]
-            d.offset += i + 1
-            return kind, name
-        }
-    }
-    abort(ErrEOD)
-    panic("unreachable")
+	for i, b := range d.data[d.offset:] {
+		if b == 0 {
+			name := d.data[d.offset : d.offset+i]
+			d.offset += i + 1
+			return kind, name
+		}
+	}
+	abort(ErrEOD)
+	panic("unreachable")
 }
 
 func (d *decodeState) scanFloat() float64 {

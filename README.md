@@ -33,7 +33,7 @@ Example
     )
 
     type ExampleDoc struct {
-        Id    mongo.ObjectId "_id"
+        Id    mongo.ObjectId `bson:"_id"`
         Title string
         Body  string
     }

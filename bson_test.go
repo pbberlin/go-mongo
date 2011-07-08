@@ -29,120 +29,120 @@ func testMap(value interface{}) map[string]interface{} {
 type stEmpty struct{}
 
 type stFloat32 struct {
-	Test float32 "test/c"
+	Test float32 `bson:"test/c"`
 }
 
 type stFloat64 struct {
-	Test float64 "test/c"
+	Test float64 `bson:"test/c"`
 }
 
 type stString struct {
-	Test string "test/c"
+	Test string `bson:"test/c"`
 }
 
 type stDoc struct {
-	Test map[string]interface{} "test/c"
+	Test map[string]interface{} `bson:"test/c"`
 }
 
 type stBinary struct {
-	Test []byte "test/c"
+	Test []byte `bson:"test/c"`
 }
 
 type stObjectId struct {
-	Test ObjectId "test/c"
+	Test ObjectId `bson:"test/c"`
 }
 
 type stBool struct {
-	Test bool "test/c"
+	Test bool `bson:"test/c"`
 }
 
 type ncBool struct {
-	Test bool "test"
+	Test bool `bson:"test"`
 }
 
 type stRegexp struct {
-	Test Regexp "test/c"
+	Test Regexp `bson:"test/c"`
 }
 
 type stSymbol struct {
-	Test Symbol "test/c"
+	Test Symbol `bson:"test/c"`
 }
 
 type stInt8 struct {
-	Test int8 "test/c"
+	Test int8 `bson:"test/c"`
 }
 
 type stInt16 struct {
-	Test int16 "test/c"
+	Test int16 `bson:"test/c"`
 }
 
 type stInt32 struct {
-	Test int32 "test/c"
+	Test int32 `bson:"test/c"`
 }
 
 type stInt struct {
-	Test int "test/c"
+	Test int `bson:"test/c"`
 }
 
 type stUint8 struct {
-	Test uint8 "test/c"
+	Test uint8 `bson:"test/c"`
 }
 
 type stUint16 struct {
-	Test uint16 "test/c"
+	Test uint16 `bson:"test/c"`
 }
 
 type stUint32 struct {
-	Test uint32 "test/c"
+	Test uint32 `bson:"test/c"`
 }
 
 type stUint64 struct {
-	Test uint64 "test/c"
+	Test uint64 `bson:"test/c"`
 }
 
 type stUint struct {
-	Test uint "test/c"
+	Test uint `bson:"test/c"`
 }
 
 type stInt64 struct {
-	Test int64 "test/c"
+	Test int64 `bson:"test/c"`
 }
 
 type stDateTime struct {
-	Test DateTime "test/c"
+	Test DateTime `bson:"test/c"`
 }
 
 type stTimestamp struct {
-	Test Timestamp "test/c"
+	Test Timestamp `bson:"test/c"`
 }
 
 type stMinMax struct {
-	Test MinMax "test/c"
+	Test MinMax `bson:"test/c"`
 }
 
 type stCodeWithScope struct {
-	Test CodeWithScope "test/c"
+	Test CodeWithScope `bson:"test/c"`
 }
 
 type stAny struct {
-	Test interface{} "test/c"
+	Test interface{} `bson:"test/c"`
 }
 
 type stStringSlice struct {
-	Test []string "test/c"
+	Test []string `bson:"test/c"`
 }
 
 type stStringArray struct {
-	Test [2]string "test/c"
+	Test [2]string `bson:"test/c"`
 }
 
 type stId struct {
-	Id   int "_id/c"
-	Test int "test/c"
+	Id   int `bson:"_id/c"`
+	Test int `bson:"test/c"`
 }
 
 type stEmbed struct {
-	Id int "_id/c"
+	Id int `bson:"_id/c"`
 	stInt32
 }
 
@@ -648,7 +648,7 @@ var structFieldsTests = []struct {
 	},
 	{
 		struct {
-			Id   int "_id"
+			Id   int `bson:"_id"`
 			Test int
 		}{},
 		M{"Test": 1},

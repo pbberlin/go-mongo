@@ -278,7 +278,7 @@ func compileStructInfo(t reflect.Type, depth map[string]int, index []int, si *st
 			}
 		default:
 			fi := &fieldInfo{name: f.Name}
-			p := strings.Split(f.Tag, "/", -1)
+			p := strings.Split(f.Tag.Get("bson"), "/")
 			if len(p) > 0 {
 				if len(p[0]) > 0 {
 					fi.name = p[0]
