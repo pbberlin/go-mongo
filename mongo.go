@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-// The mongo package is a driver for MongoDB. 
+// Package mongo is a driver for MongoDB.
 //
 // The core interface to MongoDB is defined by the Conn interface. This
 // interface provides access to all MongoDB functionality, but it is is not
