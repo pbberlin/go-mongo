@@ -253,7 +253,7 @@ func (q *Query) Explain(result interface{}) os.Error {
 	return cursor.Next(result)
 }
 
-// Distinct returns the distinct value for key among the docouments in the
+// Distinct returns the distinct value for key among the documents in the
 // result set for this query.
 //
 // More information: http://www.mongodb.org/display/DOCS/Aggregation#Aggregation-Distinct

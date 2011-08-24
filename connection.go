@@ -369,7 +369,8 @@ func (c *connection) skipDocs() os.Error {
 	return nil
 }
 
-// receive recieves a single response from the server and delivers it to the appropriate cursor.
+// receive receives a single response from the server and delivers it to the
+// appropriate cursor.
 func (c *connection) receive() os.Error {
 
 	if c.err != nil {

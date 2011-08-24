@@ -47,7 +47,7 @@ type Regexp struct {
 	// The valid options are:
 	//	i	Case insensitive matching
 	//	l	Make \w, \W, etc. locale-dependent
-	//	m	Multiline matching
+	//	m	Multi-line matching
 	//	s	Dotall mode
 	//	u	Make \w, \W, etc. match Unicode
 	//	x	Verbose mode
@@ -88,9 +88,9 @@ func newObjectId(t int64, c uint64) ObjectId {
 //  [0:4]  Big endian time since epoch in seconds. This is compatible 
 //         with other drivers.
 // 
-//  [4:12] Incrementing counter initialized with crypto random
-//         number. This ensures that object ids are unique, but
-//         is simpler than the format used by other drivers.
+//  [4:12] Incrementing counter initialized with cryptographic random number.
+//          This ensures that object ids are unique, but is simpler than 
+//          the format used by other drivers.
 func NewObjectId() ObjectId {
 	return newObjectId(time.Seconds(), nextOidCounter())
 }
@@ -354,7 +354,7 @@ func structInfoForType(t reflect.Type) *structInfo {
 		}
 	}
 	if !hasId {
-		// Explicity exclude _id because it's included by default.
+		// Explicitly exclude _id because it's included by default.
 		si.fields.Append("_id", 0)
 	}
 

@@ -57,6 +57,8 @@ type encodeState struct {
 //  /c  If the field is the zero value, then the field is not 
 //      written to the encoding. 
 //
+// Anonymous struct fields are encoded in-line with the containing struct.
+//
 // Array and slice values encode as BSON arrays.
 //
 // Map values encode as BSON documents. The map's key type must be string; the

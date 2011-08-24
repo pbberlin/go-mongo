@@ -45,7 +45,7 @@ func (e *DecodeTypeError) String() string {
 
 // Deocde decodes BSON data to value v.
 //
-// Decode traverses the value v recursively. Decode uese the inverse of the
+// Decode traverses the value v recursively. Decode uses the inverse of the
 // encodings supported by Encode, allocating maps, slices and pointers as
 // needed. The following conversions from BSON types to GO types are supported:
 //
