@@ -72,7 +72,7 @@ func (c Collection) checkError(err os.Error) (*MongoError, os.Error) {
 
 // Insert adds document to the collection.
 func (c Collection) Insert(documents ...interface{}) os.Error {
-	_, err := c.checkError(c.Conn.Insert(c.Namespace, documents...))
+	_, err := c.checkError(c.Conn.Insert(c.Namespace, nil, documents...))
 	return err
 }
 

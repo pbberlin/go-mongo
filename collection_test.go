@@ -76,7 +76,6 @@ func TestRemove(t *testing.T) {
 	}
 }
 
-
 func TestFindAndModify(t *testing.T) {
 
 	c := dialAndDrop(t, "go-mongo-test", "test")

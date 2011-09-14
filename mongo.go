@@ -30,6 +30,12 @@ var (
 	Done = os.NewError("mongo: cursor has no more results")
 )
 
+// InsertOptions specifies options for the Conn.Insert method.
+type InsertOptions struct {
+	// If true, the server will not stop processing a bulk insert if one insert fails. 
+	ContinueOnError bool
+}
+
 // RemoveOptions specifies options for the Conn.Remove method.
 type RemoveOptions struct {
 	// If true, then the database removes the first matching document in the
@@ -110,7 +116,7 @@ type Conn interface {
 	Update(namespace string, selector, update interface{}, options *UpdateOptions) os.Error
 
 	// Insert documents.
-	Insert(namespace string, documents ...interface{}) os.Error
+	Insert(namespace string, options *InsertOptions, documents ...interface{}) os.Error
 
 	// Remove documents specified by selector.
 	Remove(namespace string, selector interface{}, options *RemoveOptions) os.Error

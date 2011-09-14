@@ -96,7 +96,7 @@ func (c SafeConn) Update(namespace string, selector, update interface{}, options
 }
 
 func (c SafeConn) Insert(namespace string, documents ...interface{}) os.Error {
-	return c.checkError(namespace, c.Conn.Insert(namespace, documents...))
+	return c.checkError(namespace, c.Conn.Insert(namespace, nil, documents...))
 }
 
 func (c SafeConn) Remove(namespace string, selector interface{}, options *RemoveOptions) os.Error {

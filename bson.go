@@ -58,7 +58,6 @@ type Regexp struct {
 // ObjectId represents a BSON object identifier. 
 type ObjectId string
 
-
 // String returns the hexadecimal encoding of id. Use the function
 // NewObjectIdHex to convert the string back to an object id.
 func (id ObjectId) String() string {

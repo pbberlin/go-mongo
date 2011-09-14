@@ -29,7 +29,9 @@ func (c *fakeConn) Error() os.Error { return c.err }
 func (c *fakeConn) Update(namespace string, selector, update interface{}, options *UpdateOptions) os.Error {
 	return nil
 }
-func (c *fakeConn) Insert(namespace string, documents ...interface{}) os.Error { return nil }
+func (c *fakeConn) Insert(namespace string, options *InsertOptions, documents ...interface{}) os.Error {
+	return nil
+}
 func (c *fakeConn) Remove(namespace string, selector interface{}, options *RemoveOptions) os.Error {
 	return nil
 }

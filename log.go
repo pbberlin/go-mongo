@@ -65,9 +65,15 @@ func (c loggingConn) Update(namespace string, selector, update interface{}, opti
 	return err
 }
 
-func (c loggingConn) Insert(namespace string, documents ...interface{}) os.Error {
-	err := c.Conn.Insert(namespace, documents...)
-	log.Printf("%d.Insert(%s, %+v) (%v)", c.id, namespace, documents, err)
+func (c loggingConn) Insert(namespace string, options *InsertOptions, documents ...interface{}) os.Error {
+	err := c.Conn.Insert(namespace, options, documents...)
+	var buf bytes.Buffer
+	if options != nil {
+		if options.ContinueOnError {
+			buf.WriteString(", continue=true")
+		}
+	}
+	log.Printf("%d.Insert(%s%s, %+v) (%v)", c.id, namespace, buf.String(), documents, err)
 	return err
 }
 

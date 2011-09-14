@@ -57,7 +57,6 @@ type QuerySpec struct {
 	Max interface{} `bson:"$max"`
 }
 
-
 // Sort specifies the sort order for the result. The order is specified by
 // (key, direction) pairs. Direction is 1 for ascending order and -1 for
 // descending order.

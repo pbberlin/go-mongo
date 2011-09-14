@@ -24,17 +24,18 @@ import (
 )
 
 const (
-	updateUpsert         = 1 << 0
-	updateMulti          = 1 << 1
-	removeSingle         = 1 << 0
-	queryTailable        = 1 << 1
-	querySlaveOk         = 1 << 2
-	queryNoCursorTimeout = 1 << 4
-	queryAwaitData       = 1 << 5
-	queryExhaust         = 1 << 6
-	queryPartialResults  = 1 << 7
-	cursorNotFound       = 1 << 0
-	queryFailure         = 1 << 1
+	insertContinueOnError = 1 << 0
+	updateUpsert          = 1 << 0
+	updateMulti           = 1 << 1
+	removeSingle          = 1 << 0
+	queryTailable         = 1 << 1
+	querySlaveOk          = 1 << 2
+	queryNoCursorTimeout  = 1 << 4
+	queryAwaitData        = 1 << 5
+	queryExhaust          = 1 << 6
+	queryPartialResults   = 1 << 7
+	cursorNotFound        = 1 << 0
+	queryFailure          = 1 << 1
 )
 
 type connection struct {
@@ -165,17 +166,23 @@ func (c *connection) Update(namespace string, selector, update interface{}, opti
 	return c.send(b)
 }
 
-func (c *connection) Insert(namespace string, documents ...interface{}) (err os.Error) {
+func (c *connection) Insert(namespace string, options *InsertOptions, documents ...interface{}) (err os.Error) {
 	if len(documents) == 0 {
 		return os.NewError("mongo: insert with no documents")
 	}
+	flags := 0
+	if options != nil {
+		if options.ContinueOnError {
+			flags |= insertContinueOnError
+		}
+	}
 	b := buffer(c.buf[:0])
-	b.Next(4)                 // placeholder for message length
-	b.WriteUint32(c.nextId()) // requestId
-	b.WriteUint32(0)          // responseTo
-	b.WriteUint32(2002)       // opCode
-	b.WriteUint32(0)          // reserved
-	b.WriteCString(namespace) // namespace
+	b.Next(4)                    // placeholder for message length
+	b.WriteUint32(c.nextId())    // requestId
+	b.WriteUint32(0)             // responseTo
+	b.WriteUint32(2002)          // opCode
+	b.WriteUint32(uint32(flags)) // flags
+	b.WriteCString(namespace)    // namespace
 	for _, document := range documents {
 		b, err = Encode(b, document)
 		if err != nil {
