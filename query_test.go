@@ -119,3 +119,45 @@ func Distinct(t *testing.T) {
 		t.Fatalf("Distinct  w/ filterreturned %d results, want 5", len(r))
 	}
 }
+
+func TestFindAndModify(t *testing.T) {
+
+	c := dialAndDrop(t, "go-mongo-test", "test")
+	defer c.Conn.Close()
+
+	var m M
+	err := c.Find(M{"_id": "users"}).Upsert(M{"$inc": M{"seq": 1}}, true, &m)
+	if err != nil {
+		t.Fatal("upsert", err)
+	}
+
+	if m["seq"] != 1 {
+		t.Fatalf("m[seq]=%v, want 1", m["seq"])
+	}
+
+	m = nil
+	err = c.Find(M{"_id": "users"}).Update(M{"$inc": M{"seq": 1}}, false, &m)
+	if err != nil {
+		t.Fatal("update", err)
+	}
+
+	if m["seq"] != 1 {
+		t.Fatalf("m[seq]=%v, want 1", m["seq"])
+	}
+
+	m = nil
+	err = c.Find(M{"_id": "users"}).Remove(&m)
+	if err != nil {
+		t.Fatal("remove", err)
+	}
+
+	if m["seq"] != 2 {
+		t.Fatalf("expect m[seq]=%v, want 2", m["seq"])
+	}
+
+	m = nil
+	err = c.Find(M{"_id": "users"}).One(&m)
+	if err != Done {
+		t.Fatal("findone, expect EOF, got", err)
+	}
+}

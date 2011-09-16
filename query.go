@@ -279,3 +279,70 @@ func (q *Query) Distinct(key interface{}, result interface{}) os.Error {
 	}
 	return r.Values.Decode(result)
 }
+
+// Remove returns the first document matching the query after removing the
+// document from the database. Use the Sort method to specify the sort order
+// for matching the documents and the Fields method to specify the returned
+// fields.
+//
+// Remove is a wrapper around the MongoDB findAndModify command.
+func (q *Query) Remove(result interface{}) os.Error {
+	_, name := SplitNamespace(q.Namespace)
+	return q.findAndModify(
+		D{{"findAndModify", name}, {"remove", true}},
+		result)
+}
+
+// Update updates the first document matching the query.  The modified document
+// is returned if modified is true, otherwise the original document is
+// returned.  Use the Sort method to specify the sort order for matching the
+// documents and the Fields method to specify the returned fields.
+//
+// Update is a wrapper around the MongoDB findAndModify command.
+func (q *Query) Update(update interface{}, modified bool, result interface{}) os.Error {
+	_, name := SplitNamespace(q.Namespace)
+	return q.findAndModify(
+		D{{"findAndModify", name}, {"update", update}, {"new", modified}},
+		result)
+}
+
+// Upsert updates the first document matching the query. If a matching document
+// is not found, then the update is inserted instead. The modified document is
+// returned if modified is true, otherwise the original document is returned.
+// Use the Sort method to specify the sort order for matching the documents and
+// the Fields method to specify the returned fields.
+//
+// Upsert is a wrapper around the MongoDB findAndModify command.
+func (q *Query) Upsert(update interface{}, modified bool, result interface{}) os.Error {
+	_, name := SplitNamespace(q.Namespace)
+	return q.findAndModify(
+		D{{"findAndModify", name}, {"update", update}, {"upsert", true}, {"new", modified}},
+		result)
+}
+
+func (q *Query) findAndModify(cmd D, result interface{}) os.Error {
+	dbname, _ := SplitNamespace(q.Namespace)
+	cmd.Append("query", q.Spec.Query)
+	if q.Spec.Sort != nil {
+		cmd.Append("sort", q.Spec.Sort)
+	}
+	if q.Options.Fields != nil {
+		cmd.Append("fields", q.Options.Fields)
+	}
+	cursor, err := q.Conn.Find(dbname+".$cmd", cmd, runFindOptions)
+	if err != nil {
+		return err
+	}
+	defer cursor.Close()
+	var r struct {
+		CommandResponse
+		Value BSONData `bson:"value"`
+	}
+	if err := cursor.Next(&r); err != nil {
+		return err
+	}
+	if err := r.Error(); err != nil {
+		return err
+	}
+	return r.Value.Decode(result)
+}

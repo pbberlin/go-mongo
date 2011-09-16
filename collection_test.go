@@ -76,7 +76,7 @@ func TestRemove(t *testing.T) {
 	}
 }
 
-func TestFindAndModify(t *testing.T) {
+func TestFindAndModifyDeprecated(t *testing.T) {
 
 	c := dialAndDrop(t, "go-mongo-test", "test")
 	defer c.Conn.Close()
