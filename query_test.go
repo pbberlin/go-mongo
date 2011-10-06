@@ -88,7 +88,7 @@ func TestFill(t *testing.T) {
 	}
 }
 
-func Distinct(t *testing.T) {
+func TestDistinct(t *testing.T) {
 	c := dialAndDrop(t, "go-mongo-test", "test")
 	defer c.Conn.Close()
 

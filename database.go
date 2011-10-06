@@ -17,6 +17,8 @@ package mongo
 import (
 	"os"
 	"strings"
+	"crypto/md5"
+	"encoding/hex"
 )
 
 var (
@@ -89,20 +91,24 @@ func (db Database) C(name string) Collection {
 	}
 }
 
+func runInternal(conn Conn, dbname string, cmd interface{}, options *FindOptions, result interface{}) os.Error {
+	cursor, err := conn.Find(dbname+".$cmd", cmd, options)
+	if err != nil {
+		return err
+	}
+	defer cursor.Close()
+	return cursor.Next(result)
+}
+
 // Run runs the command cmd on the database.
 // 
 // More information: http://www.mongodb.org/display/DOCS/Commands
 func (db Database) Run(cmd interface{}, result interface{}) os.Error {
-	cursor, err := db.Conn.Find(db.Name+".$cmd", cmd, runFindOptions)
+	var d BSONData
+	err := runInternal(db.Conn, db.Name, cmd, runFindOptions, &d)
 	if err != nil {
 		return err
 	}
-
-	var d BSONData
-	if err := cursor.Next(&d); err != nil {
-		return err
-	}
-
 	var r CommandResponse
 	if err := Decode(d.Data, &r); err != nil {
 		return err
@@ -131,21 +137,14 @@ func (db Database) LastError(cmd interface{}) (*MongoError, os.Error) {
 		CommandResponse
 		MongoError
 	}
-	cursor, err := db.Conn.Find(db.Name+".$cmd", cmd, runFindOptions)
-	if err != nil {
-		return &r.MongoError, err
+	err := runInternal(db.Conn, db.Name, cmd, runFindOptions, &r)
+	if err == nil {
+		err = r.Error()
+		if err == nil && r.MongoError.Err != "" {
+			err = &r.MongoError
+		}
 	}
-	defer cursor.Close()
-	if err := cursor.Next(&r); err != nil {
-		return &r.MongoError, err
-	}
-	if err := r.CommandResponse.Error(); err != nil {
-		return &r.MongoError, err
-	}
-	if r.MongoError.Err != "" {
-		return &r.MongoError, &r.MongoError
-	}
-	return &r.MongoError, nil
+	return &r.MongoError, err
 }
 
 // DBRef is a reference to a document in a database. Use the Database
@@ -163,10 +162,60 @@ type DBRef struct {
 	Database string `bson:"$db/c"`
 }
 
+func passwordDigest(name, password string) string {
+	h := md5.New()
+	h.Write([]byte(name + ":mongo:" + password))
+	return hex.EncodeToString(h.Sum())
+}
+
 // Deference fetches the document specified by a database reference.
 func (db Database) Dereference(ref DBRef, slaveOk bool, result interface{}) os.Error {
 	if ref.Database != "" {
 		db.Name = ref.Database
 	}
 	return db.C(ref.Collection).Find(M{"_id": ref.Id}).SlaveOk(slaveOk).One(result)
+}
+
+// AddUser creates a user with name and password. If the user already exists,
+// then the password is updated.
+func (db Database) AddUser(name, password string, readOnly bool) os.Error {
+	users := db.C("system.users")
+	return users.Upsert(
+		M{"user": name},
+		M{"$set": M{
+			"user":     name,
+			"pwd":      passwordDigest(name, password),
+			"readOnly": readOnly}})
+}
+
+// RemoveUser removes user with name from the database.
+func (db Database) RemoveUser(name string) os.Error {
+	users := db.C("system.users")
+	return users.Remove(M{"user": name})
+}
+
+// Authenticate authenticates user with name and password to this database.
+func (db Database) Authenticate(name, password string) os.Error {
+	var r struct {
+		CommandResponse
+		Nonce string `bson:"nonce"`
+	}
+	if err := runInternal(db.Conn, db.Name, M{"getnonce": 1}, runFindOptions, &r); err != nil {
+		return err
+	}
+	if err := r.Error(); err != nil {
+		return err
+	}
+	h := md5.New()
+	h.Write([]byte(r.Nonce + name))
+	h.Write([]byte(passwordDigest(name, password)))
+	key := hex.EncodeToString(h.Sum())
+
+	cmd := D{{"authenticate", 1}, {"user", name}, {"nonce", r.Nonce}, {"key", key}}
+
+	var s CommandResponse
+	if err := runInternal(db.Conn, db.Name, cmd, runFindOptions, &s); err != nil {
+		return err
+	}
+	return s.Error()
 }

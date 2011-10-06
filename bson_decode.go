@@ -221,10 +221,10 @@ func (d *decodeState) decodeValue(kind int, v reflect.Value) {
 // non-pointer.  
 func (d *decodeState) indirect(v reflect.Value) reflect.Value {
 	for {
-		//if v.Kind() == reflect.Interface && !v.IsNil() {
-		//		v = v.Elem()
-		//		continue
-		//}
+		if v.Kind() == reflect.Interface && !v.IsNil() {
+			v = v.Elem()
+			continue
+		}
 		if v.Kind() != reflect.Ptr {
 			break
 		}
@@ -625,25 +625,24 @@ var typeDecoder map[reflect.Type]decoderFunc
 
 func init() {
 	kindDecoder = map[reflect.Kind]decoderFunc{
-		reflect.Bool:      decodeBool,
-		reflect.Float32:   decodeFloat,
-		reflect.Float64:   decodeFloat,
-		reflect.Int8:      decodeInt,
-		reflect.Int16:     decodeInt,
-		reflect.Int32:     decodeInt,
-		reflect.Int64:     decodeInt,
-		reflect.Int:       decodeInt,
-		reflect.Uint8:     decodeUint,
-		reflect.Uint16:    decodeUint,
-		reflect.Uint32:    decodeUint,
-		reflect.Uint64:    decodeUint,
-		reflect.Uint:      decodeUint,
-		reflect.Interface: decodeInterface,
-		reflect.Map:       decodeMap,
-		reflect.String:    decodeString,
-		reflect.Struct:    decodeStruct,
-		reflect.Slice:     decodeSlice,
-		reflect.Array:     decodeArray,
+		reflect.Bool:    decodeBool,
+		reflect.Float32: decodeFloat,
+		reflect.Float64: decodeFloat,
+		reflect.Int8:    decodeInt,
+		reflect.Int16:   decodeInt,
+		reflect.Int32:   decodeInt,
+		reflect.Int64:   decodeInt,
+		reflect.Int:     decodeInt,
+		reflect.Uint8:   decodeUint,
+		reflect.Uint16:  decodeUint,
+		reflect.Uint32:  decodeUint,
+		reflect.Uint64:  decodeUint,
+		reflect.Uint:    decodeUint,
+		reflect.Map:     decodeMap,
+		reflect.String:  decodeString,
+		reflect.Struct:  decodeStruct,
+		reflect.Slice:   decodeSlice,
+		reflect.Array:   decodeArray,
 	}
 	typeDecoder = map[reflect.Type]decoderFunc{
 		reflect.TypeOf(BSONData{}):                   decodeBSONData,
@@ -655,5 +654,6 @@ func init() {
 		reflect.TypeOf([]byte{}):                     decodeByteSlice,
 		reflect.TypeOf(make(map[string]interface{})): decodeMapStringInterface,
 		reflect.TypeOf(M{}):                          decodeMapStringInterface,
+		reflect.TypeOf(new(interface{})).Elem():      decodeInterface,
 	}
 }

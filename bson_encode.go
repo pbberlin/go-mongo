@@ -109,11 +109,11 @@ func Encode(buf []byte, doc interface{}) (result []byte, err os.Error) {
 	case typeDoc:
 		e.writeDoc(v.Interface().(Doc))
 	case typeBSONData:
-		rd := v.Interface().(BSONData)
-		if rd.Kind != kindDocument {
+		bd := v.Interface().(BSONData)
+		if bd.Kind != kindDocument {
 			return nil, &EncodeTypeError{v.Type()}
 		}
-		e.Write(rd.Data)
+		e.Write(bd.Data)
 	default:
 		switch v.Kind() {
 		case reflect.Struct:

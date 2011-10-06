@@ -68,3 +68,23 @@ func TestDBRef(t *testing.T) {
 		t.Fatalf("m[_id] = %v, want %v", m["_id"], id)
 	}
 }
+
+func TestAuthenticate(t *testing.T) {
+	c := dialAndDrop(t, "go-mongo-test", "test")
+	defer c.Conn.Close()
+
+	db := c.Db()
+	err := db.AddUser("name", "password", false)
+	if err != nil {
+		t.Fatalf("AddUser %v", err)
+	}
+	err = db.Authenticate("name", "password")
+	if err != nil {
+		t.Fatalf("Authentitate(name, password) returned %v", err)
+	}
+	err = db.Authenticate("name", "bad")
+	if err == nil {
+		t.Fatalf("Authentitate(name, bad) returned %v", err)
+	}
+	db.RemoveUser("name")
+}

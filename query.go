@@ -165,16 +165,12 @@ func (q *Query) Count() (int64, os.Error) {
 	if q.Options.Skip != 0 {
 		cmd.Append("skip", q.Options.Skip)
 	}
-	cursor, err := q.Conn.Find(dbname+".$cmd", cmd, commandOptions(&q.Options))
-	if err != nil {
-		return 0, err
-	}
-	defer cursor.Close()
 	var r struct {
 		CommandResponse
 		N int64 `bson:"n"`
 	}
-	if err := cursor.Next(&r); err != nil {
+	err := runInternal(q.Conn, dbname, cmd, commandOptions(&q.Options), &r)
+	if err != nil {
 		return 0, err
 	}
 	return r.N, r.Error()
@@ -258,26 +254,19 @@ func (q *Query) Explain(result interface{}) os.Error {
 // More information: http://www.mongodb.org/display/DOCS/Aggregation#Aggregation-Distinct
 func (q *Query) Distinct(key interface{}, result interface{}) os.Error {
 	dbname, cname := SplitNamespace(q.Namespace)
-	cmd := D{{"distinct", cname}}
+	cmd := D{{"distinct", cname}, {"key", key}}
 	if q.Spec.Query != nil {
 		cmd.Append("query", &q.Spec.Query)
 	}
-	cursor, err := q.Conn.Find(dbname+".$cmd", cmd, commandOptions(&q.Options))
-	if err != nil {
-		return err
-	}
-	defer cursor.Close()
 	var r struct {
 		CommandResponse
-		Values BSONData `bson:"values"`
+		Values interface{} `bson:"values"`
 	}
-	if err := cursor.Next(&r); err != nil {
+	r.Values = result
+	if err := runInternal(q.Conn, dbname, cmd, commandOptions(&q.Options), &r); err != nil {
 		return err
 	}
-	if err := r.Error(); err != nil {
-		return err
-	}
-	return r.Values.Decode(result)
+	return r.Error()
 }
 
 // Remove returns the first document matching the query after removing the
@@ -329,20 +318,14 @@ func (q *Query) findAndModify(cmd D, result interface{}) os.Error {
 	if q.Options.Fields != nil {
 		cmd.Append("fields", q.Options.Fields)
 	}
-	cursor, err := q.Conn.Find(dbname+".$cmd", cmd, runFindOptions)
+	var r struct {
+		CommandResponse
+		Value interface{} `bson:"value"`
+	}
+	r.Value = result
+	err := runInternal(q.Conn, dbname, cmd, runFindOptions, &r)
 	if err != nil {
 		return err
 	}
-	defer cursor.Close()
-	var r struct {
-		CommandResponse
-		Value BSONData `bson:"value"`
-	}
-	if err := cursor.Next(&r); err != nil {
-		return err
-	}
-	if err := r.Error(); err != nil {
-		return err
-	}
-	return r.Value.Decode(result)
+	return r.Error()
 }
