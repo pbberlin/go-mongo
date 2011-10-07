@@ -24,10 +24,27 @@ import (
 // application creates a pool at application startup and makes it available to
 // request handlers, possibly using a global variable:
 //
-//  pool = mongo.NewDialPool("localhost", 2)
+//      var server string           // host:port of server
+//      var name, password string   // authentication credentials
+//  
+//      ...
 //
-// This pool uses a simple database connection and a maximum of two idle
-// connections.
+//      pool = mongo.NewPool(func () (c mongo.Conn, err os.Error) {
+//          c, err = mongo.Dial(server)
+//            if err != nil {
+//                return
+//            }
+//            err = mongo.Database{c, "admin", nil}.Authenticate(name, password)
+//            if err != nil {
+//                c.Close()
+//                c = nil
+//            }
+//            return
+//        }, 3)
+//
+// This pool has a maximum of three connections to the server specified by the
+// variable "server". Each connection is logged into the "admin" database using
+// the credentials specified by the variables "name" and "password".
 //
 // A request handler gets a connection from the pool and closes the connection
 // when the handler is done:

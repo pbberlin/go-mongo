@@ -78,6 +78,7 @@ func TestAuthenticate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("AddUser %v", err)
 	}
+
 	err = db.Authenticate("name", "password")
 	if err != nil {
 		t.Fatalf("Authentitate(name, password) returned %v", err)
