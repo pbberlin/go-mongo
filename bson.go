@@ -247,23 +247,23 @@ func kindName(kind int) string {
 	return name
 }
 
-type fieldInfo struct {
+type fieldSpec struct {
 	name        string
 	index       []int
 	conditional bool
 }
 
-type structInfo struct {
-	m      map[string]*fieldInfo
-	l      []*fieldInfo
+type structSpec struct {
+	m      map[string]*fieldSpec
+	l      []*fieldSpec
 	fields D
 }
 
-func (si *structInfo) FieldInfo(name []byte) *fieldInfo {
-	return si.m[string(name)]
+func (ss *structSpec) fieldSpec(name []byte) *fieldSpec {
+	return ss.m[string(name)]
 }
 
-func compileStructInfo(t reflect.Type, depth map[string]int, index []int, si *structInfo) {
+func compileStructSpec(t reflect.Type, depth map[string]int, index []int, ss *structSpec) {
 	for i := 0; i < t.NumField(); i++ {
 		f := t.Field(i)
 		switch {
@@ -273,98 +273,98 @@ func compileStructInfo(t reflect.Type, depth map[string]int, index []int, si *st
 			// TODO: Handle pointers. Requires change to decoder and 
 			// protection against infinite recursion.
 			if f.Type.Kind() == reflect.Struct {
-				compileStructInfo(f.Type, depth, append(index, i), si)
+				compileStructSpec(f.Type, depth, append(index, i), ss)
 			}
 		default:
-			fi := &fieldInfo{name: f.Name}
+			fs := &fieldSpec{name: f.Name}
 			p := strings.Split(f.Tag.Get("bson"), "/")
 			if len(p) > 0 {
 				if len(p[0]) > 0 {
-					fi.name = p[0]
+					fs.name = p[0]
 				}
 				for _, s := range p[1:] {
 					switch s {
 					case "c":
-						fi.conditional = true
+						fs.conditional = true
 					default:
 						panic(os.NewError("bson: unknown field flag " + s + " for type " + t.Name()))
 					}
 				}
 			}
-			d, found := depth[fi.name]
+			d, found := depth[fs.name]
 			if !found {
 				d = 1 << 30
 			}
 			switch {
 			case len(index) == d:
 				// At same depth, remove from result.
-				si.m[fi.name] = nil, false
+				ss.m[fs.name] = nil, false
 				j := 0
-				for i := 0; i < len(si.l); i++ {
-					if fi.name != si.l[i].name {
-						si.l[j] = si.l[i]
+				for i := 0; i < len(ss.l); i++ {
+					if fs.name != ss.l[i].name {
+						ss.l[j] = ss.l[i]
 						j += 1
 					}
 				}
-				si.l = si.l[:j]
+				ss.l = ss.l[:j]
 			case len(index) < d:
-				fi.index = make([]int, len(index)+1)
-				copy(fi.index, index)
-				fi.index[len(index)] = i
-				depth[fi.name] = len(index)
-				si.m[fi.name] = fi
-				si.l = append(si.l, fi)
+				fs.index = make([]int, len(index)+1)
+				copy(fs.index, index)
+				fs.index[len(index)] = i
+				depth[fs.name] = len(index)
+				ss.m[fs.name] = fs
+				ss.l = append(ss.l, fs)
 			}
 		}
 	}
 }
 
 var (
-	structInfoMutex  sync.RWMutex
-	structInfoCache  = make(map[reflect.Type]*structInfo)
-	defaultFieldInfo = &fieldInfo{}
+	structSpecMutex  sync.RWMutex
+	structSpecCache  = make(map[reflect.Type]*structSpec)
+	defaultFieldSpec = &fieldSpec{}
 )
 
-func structInfoForType(t reflect.Type) *structInfo {
+func structSpecForType(t reflect.Type) *structSpec {
 
-	structInfoMutex.RLock()
-	si, found := structInfoCache[t]
-	structInfoMutex.RUnlock()
+	structSpecMutex.RLock()
+	ss, found := structSpecCache[t]
+	structSpecMutex.RUnlock()
 	if found {
-		return si
+		return ss
 	}
 
-	structInfoMutex.Lock()
-	defer structInfoMutex.Unlock()
-	si, found = structInfoCache[t]
+	structSpecMutex.Lock()
+	defer structSpecMutex.Unlock()
+	ss, found = structSpecCache[t]
 	if found {
-		return si
+		return ss
 	}
 
-	si = &structInfo{m: make(map[string]*fieldInfo)}
-	compileStructInfo(t, make(map[string]int), nil, si)
+	ss = &structSpec{m: make(map[string]*fieldSpec)}
+	compileStructSpec(t, make(map[string]int), nil, ss)
 
 	hasId := false
-	for _, fi := range si.l {
-		if fi.name == "_id" {
+	for _, fs := range ss.l {
+		if fs.name == "_id" {
 			hasId = true
 		} else {
-			si.fields.Append(fi.name, 1)
+			ss.fields.Append(fs.name, 1)
 		}
 	}
 	if !hasId {
 		// Explicitly exclude _id because it's included by default.
-		si.fields.Append("_id", 0)
+		ss.fields.Append("_id", 0)
 	}
 
-	structInfoCache[t] = si
-	return si
+	structSpecCache[t] = ss
+	return ss
 }
 
 // StructFields returns a MongoDB field specification for the given struct
 // type.
 func StructFields(t reflect.Type) interface{} {
-	return structInfoForType(t).fields
+	return structSpecForType(t).fields
 }
 
 type aborted struct{ err os.Error }

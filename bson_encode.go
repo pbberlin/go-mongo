@@ -145,9 +145,9 @@ func (e *encodeState) writeKindName(kind int, name string) {
 
 func (e *encodeState) writeStruct(v reflect.Value) {
 	offset := e.beginDoc()
-	si := structInfoForType(v.Type())
-	for _, fi := range si.l {
-		e.encodeValue(fi.name, fi, v.FieldByIndex(fi.index))
+	ss := structSpecForType(v.Type())
+	for _, fs := range ss.l {
+		e.encodeValue(fs.name, fs, v.FieldByIndex(fs.index))
 	}
 	e.WriteByte(0)
 	e.endDoc(offset)
@@ -166,13 +166,13 @@ func (e *encodeState) writeMap(v reflect.Value, topLevel bool) {
 		idValue := v.MapIndex(idKey)
 		if idValue.IsValid() {
 			skipId = true
-			e.encodeValue("_id", defaultFieldInfo, idValue)
+			e.encodeValue("_id", defaultFieldSpec, idValue)
 		}
 	}
 	for _, k := range v.MapKeys() {
 		sk := k.String()
 		if !skipId || sk != "_id" {
-			e.encodeValue(sk, defaultFieldInfo, v.MapIndex(k))
+			e.encodeValue(sk, defaultFieldSpec, v.MapIndex(k))
 		}
 	}
 	e.WriteByte(0)
@@ -182,7 +182,7 @@ func (e *encodeState) writeMap(v reflect.Value, topLevel bool) {
 func (e *encodeState) writeD(v D) {
 	offset := e.beginDoc()
 	for _, kv := range v {
-		e.encodeValue(kv.Key, defaultFieldInfo, reflect.ValueOf(kv.Value))
+		e.encodeValue(kv.Key, defaultFieldSpec, reflect.ValueOf(kv.Value))
 	}
 	e.WriteByte(0)
 	e.endDoc(offset)
@@ -191,13 +191,13 @@ func (e *encodeState) writeD(v D) {
 func (e *encodeState) writeDoc(v Doc) {
 	offset := e.beginDoc()
 	for _, kv := range v {
-		e.encodeValue(kv.Key, defaultFieldInfo, reflect.ValueOf(kv.Value))
+		e.encodeValue(kv.Key, defaultFieldSpec, reflect.ValueOf(kv.Value))
 	}
 	e.WriteByte(0)
 	e.endDoc(offset)
 }
 
-func (e *encodeState) encodeValue(name string, fi *fieldInfo, v reflect.Value) {
+func (e *encodeState) encodeValue(name string, fs *fieldSpec, v reflect.Value) {
 	if !v.IsValid() {
 		return
 	}
@@ -209,12 +209,12 @@ func (e *encodeState) encodeValue(name string, fi *fieldInfo, v reflect.Value) {
 			abort(&EncodeTypeError{t})
 		}
 	}
-	encoder(e, name, fi, v)
+	encoder(e, name, fs, v)
 }
 
-func encodeBool(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
+func encodeBool(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	b := v.Bool()
-	if b == false && fi.conditional {
+	if b == false && fs.conditional {
 		return
 	}
 	e.writeKindName(kindBool, name)
@@ -225,9 +225,9 @@ func encodeBool(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
 	}
 }
 
-func encodeInt(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
+func encodeInt(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	i := v.Int()
-	if i == 0 && fi.conditional {
+	if i == 0 && fs.conditional {
 		return
 	}
 	if i >= math.MinInt32 && i <= math.MaxInt32 {
@@ -239,18 +239,18 @@ func encodeInt(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
 	}
 }
 
-func encodeUint16(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
+func encodeUint16(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	u := v.Uint()
-	if u == 0 && fi.conditional {
+	if u == 0 && fs.conditional {
 		return
 	}
 	e.writeKindName(kindInt32, name)
 	e.WriteUint32(uint32(u))
 }
 
-func encodeUint(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
+func encodeUint(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	u := v.Uint()
-	if u == 0 && fi.conditional {
+	if u == 0 && fs.conditional {
 		return
 	}
 	if int64(u) < 0 {
@@ -265,27 +265,27 @@ func encodeUint(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
 	}
 }
 
-func encodeInt32(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
+func encodeInt32(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	i := v.Int()
-	if i == 0 && fi.conditional {
+	if i == 0 && fs.conditional {
 		return
 	}
 	e.writeKindName(kindInt32, name)
 	e.WriteUint32(uint32(i))
 }
 
-func encodeInt64(e *encodeState, kind int, name string, fi *fieldInfo, v reflect.Value) {
+func encodeInt64(e *encodeState, kind int, name string, fs *fieldSpec, v reflect.Value) {
 	i := v.Int()
-	if i == 0 && fi.conditional {
+	if i == 0 && fs.conditional {
 		return
 	}
 	e.writeKindName(kind, name)
 	e.WriteUint64(uint64(i))
 }
 
-func encodeUint64(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
+func encodeUint64(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	u := v.Uint()
-	if u == 0 && fi.conditional {
+	if u == 0 && fs.conditional {
 		return
 	}
 	if int64(u) < 0 {
@@ -295,18 +295,18 @@ func encodeUint64(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
 	e.WriteUint64(u)
 }
 
-func encodeFloat(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
+func encodeFloat(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	f := v.Float()
-	if f == 0 && fi.conditional {
+	if f == 0 && fs.conditional {
 		return
 	}
 	e.writeKindName(kindFloat, name)
 	e.WriteUint64(math.Float64bits(f))
 }
 
-func encodeString(e *encodeState, kind int, name string, fi *fieldInfo, v reflect.Value) {
+func encodeString(e *encodeState, kind int, name string, fs *fieldSpec, v reflect.Value) {
 	s := v.String()
-	if s == "" && fi.conditional {
+	if s == "" && fs.conditional {
 		return
 	}
 	e.writeKindName(kind, name)
@@ -314,9 +314,9 @@ func encodeString(e *encodeState, kind int, name string, fi *fieldInfo, v reflec
 	e.WriteCString(s)
 }
 
-func encodeRegexp(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
+func encodeRegexp(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	r := v.Interface().(Regexp)
-	if r.Pattern == "" && fi.conditional {
+	if r.Pattern == "" && fs.conditional {
 		return
 	}
 	e.writeKindName(kindRegexp, name)
@@ -324,7 +324,7 @@ func encodeRegexp(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
 	e.WriteCString(r.Options)
 }
 
-func encodeObjectId(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
+func encodeObjectId(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	oid := v.Interface().(ObjectId)
 	if oid == "" {
 		return
@@ -336,7 +336,7 @@ func encodeObjectId(e *encodeState, name string, fi *fieldInfo, v reflect.Value)
 	copy(e.Next(12), oid)
 }
 
-func encodeBSONData(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
+func encodeBSONData(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	bd := v.Interface().(BSONData)
 	if bd.Kind == 0 {
 		return
@@ -345,9 +345,9 @@ func encodeBSONData(e *encodeState, name string, fi *fieldInfo, v reflect.Value)
 	e.Write(bd.Data)
 }
 
-func encodeCodeWithScope(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
+func encodeCodeWithScope(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	c := v.Interface().(CodeWithScope)
-	if c.Code == "" && c.Scope == nil && fi.conditional {
+	if c.Code == "" && c.Scope == nil && fs.conditional {
 		return
 	}
 	e.writeKindName(kindCodeWithScope, name)
@@ -356,16 +356,16 @@ func encodeCodeWithScope(e *encodeState, name string, fi *fieldInfo, v reflect.V
 	e.WriteCString(c.Code)
 	scopeOffset := e.beginDoc()
 	for k, v := range c.Scope {
-		e.encodeValue(k, defaultFieldInfo, reflect.ValueOf(v))
+		e.encodeValue(k, defaultFieldSpec, reflect.ValueOf(v))
 	}
 	e.WriteByte(0)
 	e.endDoc(scopeOffset)
 	e.endDoc(offset)
 }
 
-func encodeMinMax(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
+func encodeMinMax(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	i := v.Interface().(MinMax)
-	if i == 0 && fi.conditional {
+	if i == 0 && fs.conditional {
 		return
 	}
 	switch v.Interface().(MinMax) {
@@ -378,12 +378,12 @@ func encodeMinMax(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
 	}
 }
 
-func encodeStruct(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
+func encodeStruct(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	e.writeKindName(kindDocument, name)
 	e.writeStruct(v)
 }
 
-func encodeMap(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
+func encodeMap(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	if v.IsNil() {
 		return
 	}
@@ -391,7 +391,7 @@ func encodeMap(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
 	e.writeMap(v, false)
 }
 
-func encodeD(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
+func encodeD(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	d := v.Interface().(D)
 	if d == nil {
 		return
@@ -400,7 +400,7 @@ func encodeD(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
 	e.writeD(d)
 }
 
-func encodeDoc(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
+func encodeDoc(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	d := v.Interface().(Doc)
 	if d == nil {
 		return
@@ -409,7 +409,7 @@ func encodeDoc(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
 	e.writeDoc(d)
 }
 
-func encodeByteSlice(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
+func encodeByteSlice(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	b := v.Interface().([]byte)
 	if b == nil {
 		return
@@ -420,39 +420,39 @@ func encodeByteSlice(e *encodeState, name string, fi *fieldInfo, v reflect.Value
 	e.Write(b)
 }
 
-func encodeSlice(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
+func encodeSlice(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	if v.IsNil() {
 		return
 	}
-	encodeArray(e, name, fi, v)
+	encodeArray(e, name, fs, v)
 }
 
-func encodeArray(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
+func encodeArray(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	e.writeKindName(kindArray, name)
 	offset := e.beginDoc()
 	n := v.Len()
 	if n < len(itoas) {
 		for i, k := range itoas[:n] {
-			e.encodeValue(k, defaultFieldInfo, v.Index(i))
+			e.encodeValue(k, defaultFieldSpec, v.Index(i))
 		}
 	} else {
 		for i := 0; i < n; i++ {
-			e.encodeValue(strconv.Itoa(i), defaultFieldInfo, v.Index(i))
+			e.encodeValue(strconv.Itoa(i), defaultFieldSpec, v.Index(i))
 		}
 	}
 	e.WriteByte(0)
 	e.endDoc(offset)
 }
 
-func encodeInterfaceOrPtr(e *encodeState, name string, fi *fieldInfo, v reflect.Value) {
+func encodeInterfaceOrPtr(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	if v.IsNil() {
 		return
 	} else {
-		e.encodeValue(name, defaultFieldInfo, v.Elem())
+		e.encodeValue(name, defaultFieldSpec, v.Elem())
 	}
 }
 
-type encoderFunc func(e *encodeState, name string, fi *fieldInfo, v reflect.Value)
+type encoderFunc func(e *encodeState, name string, fs *fieldSpec, v reflect.Value)
 
 var kindEncoder map[reflect.Kind]encoderFunc
 var typeEncoder map[reflect.Type]encoderFunc
@@ -472,15 +472,15 @@ func init() {
 		reflect.Uint32:  encodeUint,
 		reflect.Uint64:  encodeUint64,
 		reflect.Uint:    encodeUint,
-		reflect.Int64: func(e *encodeState, name string, fi *fieldInfo, value reflect.Value) {
-			encodeInt64(e, kindInt64, name, fi, value)
+		reflect.Int64: func(e *encodeState, name string, fs *fieldSpec, value reflect.Value) {
+			encodeInt64(e, kindInt64, name, fs, value)
 		},
 		reflect.Interface: encodeInterfaceOrPtr,
 		reflect.Map:       encodeMap,
 		reflect.Ptr:       encodeInterfaceOrPtr,
 		reflect.Slice:     encodeSlice,
-		reflect.String: func(e *encodeState, name string, fi *fieldInfo, value reflect.Value) {
-			encodeString(e, kindString, name, fi, value)
+		reflect.String: func(e *encodeState, name string, fs *fieldSpec, value reflect.Value) {
+			encodeString(e, kindString, name, fs, value)
 		},
 		reflect.Struct: encodeStruct,
 	}
@@ -488,21 +488,21 @@ func init() {
 		typeDoc:      encodeDoc,
 		typeD:        encodeD,
 		typeBSONData: encodeBSONData,
-		reflect.TypeOf(Code("")): func(e *encodeState, name string, fi *fieldInfo, value reflect.Value) {
-			encodeString(e, kindCode, name, fi, value)
+		reflect.TypeOf(Code("")): func(e *encodeState, name string, fs *fieldSpec, value reflect.Value) {
+			encodeString(e, kindCode, name, fs, value)
 		},
 		reflect.TypeOf(CodeWithScope{}): encodeCodeWithScope,
-		reflect.TypeOf(DateTime(0)): func(e *encodeState, name string, fi *fieldInfo, value reflect.Value) {
-			encodeInt64(e, kindDateTime, name, fi, value)
+		reflect.TypeOf(DateTime(0)): func(e *encodeState, name string, fs *fieldSpec, value reflect.Value) {
+			encodeInt64(e, kindDateTime, name, fs, value)
 		},
 		reflect.TypeOf(MinMax(0)):    encodeMinMax,
 		reflect.TypeOf(ObjectId("")): encodeObjectId,
 		reflect.TypeOf(Regexp{}):     encodeRegexp,
-		reflect.TypeOf(Symbol("")): func(e *encodeState, name string, fi *fieldInfo, value reflect.Value) {
-			encodeString(e, kindSymbol, name, fi, value)
+		reflect.TypeOf(Symbol("")): func(e *encodeState, name string, fs *fieldSpec, value reflect.Value) {
+			encodeString(e, kindSymbol, name, fs, value)
 		},
-		reflect.TypeOf(Timestamp(0)): func(e *encodeState, name string, fi *fieldInfo, value reflect.Value) {
-			encodeInt64(e, kindTimestamp, name, fi, value)
+		reflect.TypeOf(Timestamp(0)): func(e *encodeState, name string, fs *fieldSpec, value reflect.Value) {
+			encodeInt64(e, kindTimestamp, name, fs, value)
 		},
 		reflect.TypeOf([]byte{}): encodeByteSlice,
 	}
