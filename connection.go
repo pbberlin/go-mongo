@@ -426,7 +426,7 @@ func (c *connection) receive() os.Error {
 		return c.err
 	}
 
-	c.cursors[responseTo] = nil, false
+	delete(c.cursors, responseTo)
 	r.cursorId = cursorId
 	r.requestId = 0
 	if r.flags&queryExhaust != 0 && cursorId != 0 {
@@ -512,7 +512,7 @@ func (r *cursor) Close() os.Error {
 		r.conn.skipDocs()
 	}
 	if r.requestId != 0 && r.conn.cursors != nil {
-		r.conn.cursors[r.requestId] = nil, false
+		delete(r.conn.cursors, r.requestId)
 	}
 	r.err = os.NewError("mongo: cursor closed")
 	r.conn = nil

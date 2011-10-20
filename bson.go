@@ -298,7 +298,7 @@ func compileStructSpec(t reflect.Type, depth map[string]int, index []int, ss *st
 			switch {
 			case len(index) == d:
 				// At same depth, remove from result.
-				ss.m[fs.name] = nil, false
+				delete(ss.m, fs.name)
 				j := 0
 				for i := 0; i < len(ss.l); i++ {
 					if fs.name != ss.l[i].name {
