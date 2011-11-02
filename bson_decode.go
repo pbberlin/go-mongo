@@ -15,12 +15,12 @@
 package mongo
 
 import (
+	"errors"
 	"math"
-	"os"
 	"reflect"
 )
 
-var ErrEOD = os.NewError("bson: unexpected end of data when parsing BSON")
+var ErrEOD = errors.New("bson: unexpected end of data when parsing BSON")
 
 // DecodeConvertError is returned when decoder cannot convert BSON value to the
 // target type.
@@ -29,7 +29,7 @@ type DecodeConvertError struct {
 	t    reflect.Type
 }
 
-func (e *DecodeConvertError) String() string {
+func (e *DecodeConvertError) Error() string {
 	return "bson: could not decode " + kindName(e.kind) + " to " + e.t.String()
 }
 
@@ -39,7 +39,7 @@ type DecodeTypeError struct {
 	kind int
 }
 
-func (e *DecodeTypeError) String() string {
+func (e *DecodeTypeError) Error() string {
 	return "bson: could not decode " + kindName(e.kind)
 }
 
@@ -70,12 +70,12 @@ func (e *DecodeTypeError) String() string {
 //
 // To decode a BSON value into a nil interface value, the first type listed in
 // the right hand column of the table above is used.
-func Decode(data []byte, v interface{}) (err os.Error) {
+func Decode(data []byte, v interface{}) (err error) {
 	return decodeInternal(kindDocument, data, v)
 }
 
 // decodeInternal decodes BSON data with given kind to v.
-func decodeInternal(kind int, data []byte, v interface{}) (err os.Error) {
+func decodeInternal(kind int, data []byte, v interface{}) (err error) {
 	defer handleAbort(&err)
 	value, ok := v.(reflect.Value)
 	if !ok {
@@ -83,15 +83,15 @@ func decodeInternal(kind int, data []byte, v interface{}) (err os.Error) {
 		switch value.Kind() {
 		case reflect.Map:
 			if value.IsNil() {
-				return os.NewError("bson: Decode map arg must not be nil.")
+				return errors.New("bson: Decode map arg must not be nil.")
 			}
 		case reflect.Ptr:
 			if value.IsNil() {
-				return os.NewError("bson: Decode pointer arg must not be nil.")
+				return errors.New("bson: Decode pointer arg must not be nil.")
 			}
 			value = value.Elem()
 		default:
-			return os.NewError("bson: Decode arg must be pointer or map.")
+			return errors.New("bson: Decode arg must be pointer or map.")
 		}
 	}
 
@@ -104,12 +104,12 @@ func decodeInternal(kind int, data []byte, v interface{}) (err os.Error) {
 type decodeState struct {
 	data       []byte
 	offset     int // read offset in data
-	savedError os.Error
+	savedError error
 }
 
 // saveError saves the first err it is called with, for reporting at the end of
 // Decode.
-func (d *decodeState) saveError(err os.Error) {
+func (d *decodeState) saveError(err error) {
 	if d.savedError == nil {
 		d.savedError = err
 	}
@@ -131,7 +131,7 @@ func (d *decodeState) beginDoc() int {
 
 func (d *decodeState) endDoc(offset int) {
 	if d.offset != offset {
-		abort(os.NewError("bson: doc length wrong"))
+		abort(errors.New("bson: doc length wrong"))
 	}
 }
 

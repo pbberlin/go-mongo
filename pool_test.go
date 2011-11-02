@@ -15,33 +15,33 @@
 package mongo
 
 import (
+	"io"
 	"testing"
-	"os"
 )
 
 type fakeConn struct {
 	klosed bool
-	err    os.Error
+	err    error
 }
 
-func (c *fakeConn) Close() os.Error { c.klosed = true; return nil }
-func (c *fakeConn) Error() os.Error { return c.err }
-func (c *fakeConn) Update(namespace string, selector, update interface{}, options *UpdateOptions) os.Error {
+func (c *fakeConn) Close() error { c.klosed = true; return nil }
+func (c *fakeConn) Error() error { return c.err }
+func (c *fakeConn) Update(namespace string, selector, update interface{}, options *UpdateOptions) error {
 	return nil
 }
-func (c *fakeConn) Insert(namespace string, options *InsertOptions, documents ...interface{}) os.Error {
+func (c *fakeConn) Insert(namespace string, options *InsertOptions, documents ...interface{}) error {
 	return nil
 }
-func (c *fakeConn) Remove(namespace string, selector interface{}, options *RemoveOptions) os.Error {
+func (c *fakeConn) Remove(namespace string, selector interface{}, options *RemoveOptions) error {
 	return nil
 }
-func (c *fakeConn) Find(namespace string, query interface{}, options *FindOptions) (Cursor, os.Error) {
+func (c *fakeConn) Find(namespace string, query interface{}, options *FindOptions) (Cursor, error) {
 	return nil, nil
 }
 
 func TestPool(t *testing.T) {
 	var count int
-	p := NewPool(func() (Conn, os.Error) { count += 1; return &fakeConn{}, nil }, 2)
+	p := NewPool(func() (Conn, error) { count += 1; return &fakeConn{}, nil }, 2)
 
 	count = 0
 	for i := 0; i < 10; i++ {
@@ -59,7 +59,7 @@ func TestPool(t *testing.T) {
 	count = 0
 	for i := 0; i < 10; i++ {
 		c, _ := p.Get()
-		c.(*pooledConnection).Conn.(*fakeConn).err = os.EOF
+		c.(*pooledConnection).Conn.(*fakeConn).err = io.EOF
 		c.Close()
 	}
 	if count != 10 {

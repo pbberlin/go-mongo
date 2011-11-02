@@ -22,12 +22,10 @@
 // methods for working with Conn objects. 
 package mongo
 
-import (
-	"os"
-)
+import "errors"
 
 var (
-	Done = os.NewError("mongo: cursor has no more results")
+	Done = errors.New("mongo: cursor has no more results")
 )
 
 // InsertOptions specifies options for the Conn.Insert method.
@@ -107,22 +105,22 @@ type FindOptions struct {
 // the collection. 
 type Conn interface {
 	// Close releases the resources used by this connection.
-	Close() os.Error
+	Close() error
 
 	// Error returns non-nil if the connection has a permanent error.
-	Error() os.Error
+	Error() error
 
 	// Update document specified by selector with update.
-	Update(namespace string, selector, update interface{}, options *UpdateOptions) os.Error
+	Update(namespace string, selector, update interface{}, options *UpdateOptions) error
 
 	// Insert documents.
-	Insert(namespace string, options *InsertOptions, documents ...interface{}) os.Error
+	Insert(namespace string, options *InsertOptions, documents ...interface{}) error
 
 	// Remove documents specified by selector.
-	Remove(namespace string, selector interface{}, options *RemoveOptions) os.Error
+	Remove(namespace string, selector interface{}, options *RemoveOptions) error
 
 	// Find documents specified by selector. The returned cursor must be closed.
-	Find(namespace string, query interface{}, options *FindOptions) (Cursor, os.Error)
+	Find(namespace string, query interface{}, options *FindOptions) (Cursor, error)
 }
 
 // Cursor iterates over the results from a Find operation.
@@ -153,15 +151,15 @@ type Conn interface {
 // tailable cursors.
 type Cursor interface {
 	// Close releases the resources used by this connection. 
-	Close() os.Error
+	Close() error
 
 	// Error returns non-nil if the cursor has a permanent error. 
-	Error() os.Error
+	Error() error
 
 	// HasNext returns true if there are more documents to retrieve.
 	HasNext() bool
 
 	// Next fetches the next document from the cursor. Value must be a map or
 	// a non-nil pointer to struct or map.
-	Next(value interface{}) os.Error
+	Next(value interface{}) error
 }

@@ -14,10 +14,6 @@
 
 package mongo
 
-import (
-	"os"
-)
-
 // No more data in cursor.
 var EOF = Done
 
@@ -29,7 +25,7 @@ func (d *Doc) Append(name string, value interface{}) {
 }
 
 // FindOne is deprecated. Use Collection{conn, namespace}.Find(query).One(result) instead.
-func FindOne(conn Conn, namespace string, query interface{}, options *FindOptions, result interface{}) os.Error {
+func FindOne(conn Conn, namespace string, query interface{}, options *FindOptions, result interface{}) error {
 	q := Collection{Conn: conn, Namespace: namespace}.Find(query)
 	if options != nil {
 		q.Options = *options
@@ -38,13 +34,13 @@ func FindOne(conn Conn, namespace string, query interface{}, options *FindOption
 }
 
 // RunCommand is deprecated. Use Database{conn, dbname}.Run(cmd, result) instead.
-func RunCommand(conn Conn, namespace string, cmd Doc, result interface{}) os.Error {
+func RunCommand(conn Conn, namespace string, cmd Doc, result interface{}) error {
 	dbname, _ := SplitNamespace(namespace)
 	return Database{Conn: conn, Name: dbname}.Run(cmd, result)
 }
 
 // LastError is deprecated. Use Database{Conn: conn, Name: dbname}.LastError(cmd) instead.
-func LastError(conn Conn, namespace string, cmd interface{}) os.Error {
+func LastError(conn Conn, namespace string, cmd interface{}) error {
 	dbname, _ := SplitNamespace(namespace)
 	_, err := Database{Conn: conn, Name: dbname}.LastError(cmd)
 	return err
@@ -58,17 +54,17 @@ func commandNamespace(namespace string) string {
 }
 
 // SafeInsert is deprecated.
-func SafeInsert(conn Conn, namespace string, errorCmd interface{}, documents ...interface{}) os.Error {
+func SafeInsert(conn Conn, namespace string, errorCmd interface{}, documents ...interface{}) error {
 	return SafeConn{conn, errorCmd}.Insert(namespace, documents...)
 }
 
 // SafeUpdate is deprecated.
-func SafeUpdate(conn Conn, namespace string, errorCmd interface{}, selector, update interface{}, options *UpdateOptions) os.Error {
+func SafeUpdate(conn Conn, namespace string, errorCmd interface{}, selector, update interface{}, options *UpdateOptions) error {
 	return SafeConn{conn, errorCmd}.Update(namespace, selector, update, options)
 }
 
 // SafeRemove is deprecated.
-func SafeRemove(conn Conn, namespace string, errorCmd interface{}, selector interface{}, options *RemoveOptions) os.Error {
+func SafeRemove(conn Conn, namespace string, errorCmd interface{}, selector interface{}, options *RemoveOptions) error {
 	return SafeConn{conn, errorCmd}.Remove(namespace, selector, options)
 }
 
@@ -82,7 +78,7 @@ type SafeConn struct {
 	Cmd interface{}
 }
 
-func (c SafeConn) checkError(namespace string, err os.Error) os.Error {
+func (c SafeConn) checkError(namespace string, err error) error {
 	if err != nil {
 		return err
 	}
@@ -91,20 +87,20 @@ func (c SafeConn) checkError(namespace string, err os.Error) os.Error {
 	return err
 }
 
-func (c SafeConn) Update(namespace string, selector, update interface{}, options *UpdateOptions) os.Error {
+func (c SafeConn) Update(namespace string, selector, update interface{}, options *UpdateOptions) error {
 	return c.checkError(namespace, c.Conn.Update(namespace, selector, update, options))
 }
 
-func (c SafeConn) Insert(namespace string, documents ...interface{}) os.Error {
+func (c SafeConn) Insert(namespace string, documents ...interface{}) error {
 	return c.checkError(namespace, c.Conn.Insert(namespace, nil, documents...))
 }
 
-func (c SafeConn) Remove(namespace string, selector interface{}, options *RemoveOptions) os.Error {
+func (c SafeConn) Remove(namespace string, selector interface{}, options *RemoveOptions) error {
 	return c.checkError(namespace, c.Conn.Remove(namespace, selector, options))
 }
 
 // Count is deprected. Use Collection{Conn: conn, Namespace:namespace}.Find(query).Count() instead.
-func Count(conn Conn, namespace string, query interface{}, options *FindOptions) (int64, os.Error) {
+func Count(conn Conn, namespace string, query interface{}, options *FindOptions) (int64, error) {
 	q := Collection{Conn: conn, Namespace: namespace}.Find(query)
 	if options != nil {
 		q.Options = *options
@@ -113,7 +109,7 @@ func Count(conn Conn, namespace string, query interface{}, options *FindOptions)
 }
 
 // FindAndUpdate is deprecated. Use the Collection FindAndUpdate method instead.
-func FindAndUpdate(conn Conn, namespace string, selector, update interface{}, options *FindAndModifyOptions, result interface{}) os.Error {
+func FindAndUpdate(conn Conn, namespace string, selector, update interface{}, options *FindAndModifyOptions, result interface{}) error {
 	_, name := SplitNamespace(namespace)
 	return findAndModify(
 		conn,
@@ -127,7 +123,7 @@ func FindAndUpdate(conn Conn, namespace string, selector, update interface{}, op
 }
 
 // FindAndRemove is deprecated. Use the Collection FindAndRemove method instead.
-func FindAndRemove(conn Conn, namespace string, selector interface{}, options *FindAndModifyOptions, result interface{}) os.Error {
+func FindAndRemove(conn Conn, namespace string, selector interface{}, options *FindAndModifyOptions, result interface{}) error {
 	_, name := SplitNamespace(namespace)
 	return findAndModify(
 		conn,
@@ -140,7 +136,7 @@ func FindAndRemove(conn Conn, namespace string, selector interface{}, options *F
 		result)
 }
 
-func findAndModify(conn Conn, namespace string, cmd Doc, options *FindAndModifyOptions, result interface{}) os.Error {
+func findAndModify(conn Conn, namespace string, cmd Doc, options *FindAndModifyOptions, result interface{}) error {
 	if options != nil {
 		if options.New {
 			cmd.Append("new", true)
@@ -191,7 +187,7 @@ type FindAndModifyOptions struct {
 // command.
 //
 // DEPRECATED. Use Query.Update or Query.Upsert instead.
-func (c Collection) FindAndUpdate(selector, update interface{}, options *FindAndModifyOptions, result interface{}) os.Error {
+func (c Collection) FindAndUpdate(selector, update interface{}, options *FindAndModifyOptions, result interface{}) error {
 	_, name := SplitNamespace(c.Namespace)
 	cmd := struct {
 		Collection string      `bson:"findAndModify"`
@@ -213,7 +209,7 @@ func (c Collection) FindAndUpdate(selector, update interface{}, options *FindAnd
 // FindAndRemove is a wrapper around the MongoDB findAndModify command.
 //
 // DEPRECATED. Use Query.Remove instead.
-func (c Collection) FindAndRemove(selector interface{}, options *FindAndModifyOptions, result interface{}) os.Error {
+func (c Collection) FindAndRemove(selector interface{}, options *FindAndModifyOptions, result interface{}) error {
 	_, name := SplitNamespace(c.Namespace)
 	cmd := struct {
 		Collection string      `bson:"findAndModify"`
@@ -231,7 +227,7 @@ func (c Collection) FindAndRemove(selector interface{}, options *FindAndModifyOp
 	return c.findAndModify(&cmd, result)
 }
 
-func (c Collection) findAndModify(cmd interface{}, result interface{}) os.Error {
+func (c Collection) findAndModify(cmd interface{}, result interface{}) error {
 	dbname, _ := SplitNamespace(c.Namespace)
 	cursor, err := c.Conn.Find(dbname+".$cmd", cmd, runFindOptions)
 	if err != nil {

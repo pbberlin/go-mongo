@@ -14,10 +14,6 @@
 
 package mongo
 
-import (
-	"os"
-)
-
 // Pool maintains a pool of database connections.
 //
 // The following example shows how to use a pool in a web application. The
@@ -60,7 +56,7 @@ import (
 // the connection does not have a permanent error. Otherwise, Close() releases
 // the resources used by the connection.
 type Pool struct {
-	newFn func() (Conn, os.Error)
+	newFn func() (Conn, error)
 	conns chan Conn
 }
 
@@ -72,24 +68,24 @@ type pooledConnection struct {
 // NewDialPool returns a new connection pool. The pool uses mongo.Dial to
 // create new connections and maintains a maximum of maxIdle connections.
 func NewDialPool(addr string, maxIdle int) *Pool {
-	return NewPool(func() (Conn, os.Error) { return Dial(addr) }, maxIdle)
+	return NewPool(func() (Conn, error) { return Dial(addr) }, maxIdle)
 }
 
 // NewPool returns a new connection pool. The pool uses newFn to create
 // connections as needed and maintains a maximum of maxIdle idle connections.
-func NewPool(newFn func() (Conn, os.Error), maxIdle int) *Pool {
+func NewPool(newFn func() (Conn, error), maxIdle int) *Pool {
 	return &Pool{newFn: newFn, conns: make(chan Conn, maxIdle)}
 }
 
 // Get returns an idle connection from the pool if available or creates a new
 // connection. The caller should Close() the connection to return the
 // connection to the pool.
-func (p *Pool) Get() (Conn, os.Error) {
+func (p *Pool) Get() (Conn, error) {
 	var c Conn
 	select {
 	case c = <-p.conns:
 	default:
-		var err os.Error
+		var err error
 		c, err = p.newFn()
 		if err != nil {
 			return nil, err
@@ -98,7 +94,7 @@ func (p *Pool) Get() (Conn, os.Error) {
 	return &pooledConnection{Conn: c, pool: p}, nil
 }
 
-func (c *pooledConnection) Close() os.Error {
+func (c *pooledConnection) Close() error {
 	if c.Conn == nil {
 		return nil
 	}

@@ -16,9 +16,9 @@ package mongo
 
 import (
 	"bufio"
+	"errors"
 	"io"
 	"net"
-	"os"
 	"strconv"
 	"strings"
 )
@@ -43,7 +43,7 @@ type connection struct {
 	addr          string
 	requestId     uint32
 	cursors       map[uint32]*cursor
-	err           os.Error
+	err           error
 	buf           [1024]byte
 	responseLen   int
 	responseCount int
@@ -61,11 +61,11 @@ type cursor struct {
 	count     int
 	docs      [][]byte
 	flags     int
-	err       os.Error
+	err       error
 }
 
 // Dial connects to server at addr.
-func Dial(addr string) (Conn, os.Error) {
+func Dial(addr string) (Conn, error) {
 	if strings.LastIndex(addr, ":") <= strings.LastIndex(addr, "]") {
 		addr = addr + ":27017"
 	}
@@ -76,7 +76,7 @@ func Dial(addr string) (Conn, os.Error) {
 	return &c, c.connect()
 }
 
-func (c *connection) connect() os.Error {
+func (c *connection) connect() error {
 	conn, err := net.Dial("tcp", c.addr)
 	if err != nil {
 		return err
@@ -94,7 +94,7 @@ func (c *connection) nextId() uint32 {
 	return c.requestId
 }
 
-func (c *connection) fatal(err os.Error) os.Error {
+func (c *connection) fatal(err error) error {
 	if c.err == nil {
 		c.Close()
 		c.err = err
@@ -103,7 +103,7 @@ func (c *connection) fatal(err os.Error) os.Error {
 }
 
 // Close closes the connection to the server.
-func (c *connection) Close() (err os.Error) {
+func (c *connection) Close() (err error) {
 	if c.conn != nil {
 		err = c.conn.Close()
 		c.conn = nil
@@ -112,16 +112,16 @@ func (c *connection) Close() (err os.Error) {
 	c.cursor = nil
 	c.responseCount = 0
 	c.responseLen = 0
-	c.err = os.NewError("mongo: connection closed")
+	c.err = errors.New("mongo: connection closed")
 	return err
 }
 
-func (c *connection) Error() os.Error {
+func (c *connection) Error() error {
 	return c.err
 }
 
 // send sets the message length and writes the message to the socket.
-func (c *connection) send(msg []byte) os.Error {
+func (c *connection) send(msg []byte) error {
 	if c.err != nil {
 		return c.err
 	}
@@ -133,7 +133,7 @@ func (c *connection) send(msg []byte) os.Error {
 	return nil
 }
 
-func (c *connection) Update(namespace string, selector, update interface{}, options *UpdateOptions) (err os.Error) {
+func (c *connection) Update(namespace string, selector, update interface{}, options *UpdateOptions) (err error) {
 	if selector == nil {
 		selector = emptyDoc
 	}
@@ -166,9 +166,9 @@ func (c *connection) Update(namespace string, selector, update interface{}, opti
 	return c.send(b)
 }
 
-func (c *connection) Insert(namespace string, options *InsertOptions, documents ...interface{}) (err os.Error) {
+func (c *connection) Insert(namespace string, options *InsertOptions, documents ...interface{}) (err error) {
 	if len(documents) == 0 {
-		return os.NewError("mongo: insert with no documents")
+		return errors.New("mongo: insert with no documents")
 	}
 	flags := 0
 	if options != nil {
@@ -192,7 +192,7 @@ func (c *connection) Insert(namespace string, options *InsertOptions, documents 
 	return c.send(b)
 }
 
-func (c *connection) Remove(namespace string, selector interface{}, options *RemoveOptions) (err os.Error) {
+func (c *connection) Remove(namespace string, selector interface{}, options *RemoveOptions) (err error) {
 	if selector == nil {
 		selector = emptyDoc
 	}
@@ -217,7 +217,7 @@ func (c *connection) Remove(namespace string, selector interface{}, options *Rem
 	return c.send(b)
 }
 
-func (c *connection) Find(namespace string, query interface{}, options *FindOptions) (Cursor, os.Error) {
+func (c *connection) Find(namespace string, query interface{}, options *FindOptions) (Cursor, error) {
 	r := cursor{
 		conn:      c,
 		namespace: namespace,
@@ -289,7 +289,7 @@ func (c *connection) Find(namespace string, query interface{}, options *FindOpti
 	return &r, nil
 }
 
-func (c *connection) getMore(r *cursor) os.Error {
+func (c *connection) getMore(r *cursor) error {
 	requestId := c.nextId()
 	b := buffer(c.buf[:0])
 	b.Next(4)                   // placeholder for message length
@@ -308,7 +308,7 @@ func (c *connection) getMore(r *cursor) os.Error {
 	return nil
 }
 
-func (c *connection) killCursors(cursorIds ...uint64) os.Error {
+func (c *connection) killCursors(cursorIds ...uint64) error {
 	b := buffer(c.buf[:0])
 	b.Next(4)                             // placeholder for message length
 	b.WriteUint32(c.nextId())             // requestId
@@ -323,9 +323,9 @@ func (c *connection) killCursors(cursorIds ...uint64) os.Error {
 }
 
 // readDoc reads a single document from the connection.
-func (c *connection) readDoc(alloc bool) ([]byte, os.Error) {
+func (c *connection) readDoc(alloc bool) ([]byte, error) {
 	if c.responseLen < 4 {
-		return nil, c.fatal(os.NewError("mongo: incomplete document in message"))
+		return nil, c.fatal(errors.New("mongo: incomplete document in message"))
 	}
 	b, err := c.br.Peek(4)
 	if err != nil {
@@ -333,7 +333,7 @@ func (c *connection) readDoc(alloc bool) ([]byte, os.Error) {
 	}
 	n := int(wire.Uint32(b))
 	if c.responseLen < n {
-		return nil, c.fatal(os.NewError("mongo: incomplete document in message"))
+		return nil, c.fatal(errors.New("mongo: incomplete document in message"))
 	}
 	var p []byte
 	if n > len(c.buf) || alloc {
@@ -350,20 +350,20 @@ func (c *connection) readDoc(alloc bool) ([]byte, os.Error) {
 	if c.responseCount == 0 {
 		c.cursor = nil
 		if c.responseLen != 0 {
-			return nil, c.fatal(os.NewError("mongo: unexpected data in message."))
+			return nil, c.fatal(errors.New("mongo: unexpected data in message."))
 		}
 	}
 	return p, nil
 }
 
 // skipDocs skips over unread documents in the current batch.
-func (c *connection) skipDocs() os.Error {
+func (c *connection) skipDocs() error {
 	for c.responseLen > 0 {
 		n := c.responseLen
 		if n > len(c.buf) {
 			n = len(c.buf)
 		}
-		var err os.Error
+		var err error
 		n, err = c.br.Read(c.buf[0:n])
 		if err != nil {
 			return c.fatal(err)
@@ -378,7 +378,7 @@ func (c *connection) skipDocs() os.Error {
 
 // receive receives a single response from the server and delivers it to the
 // appropriate cursor.
-func (c *connection) receive() os.Error {
+func (c *connection) receive() error {
 
 	if c.err != nil {
 		return c.err
@@ -410,7 +410,7 @@ func (c *connection) receive() os.Error {
 	c.responseLen -= 36
 
 	if opCode != 1 {
-		return c.fatal(os.NewError("mongo: unknown response opcode " + strconv.Itoa(int(opCode))))
+		return c.fatal(errors.New("mongo: unknown response opcode " + strconv.Itoa(int(opCode))))
 	}
 
 	r := c.cursors[responseTo]
@@ -435,15 +435,15 @@ func (c *connection) receive() os.Error {
 	}
 
 	if flags&cursorNotFound != 0 {
-		r.fatal(os.NewError("mongo: cursor not found"))
+		r.fatal(errors.New("mongo: cursor not found"))
 		if c.responseCount != 0 || c.responseLen != 0 {
-			return c.fatal(os.NewError("mongo: unexpected data after cursor not found."))
+			return c.fatal(errors.New("mongo: unexpected data after cursor not found."))
 		}
 	}
 
 	if flags&queryFailure != 0 {
 		if c.responseCount != 1 {
-			return c.fatal(os.NewError("mongo: unexpected number of docs for query failure."))
+			return c.fatal(errors.New("mongo: unexpected number of docs for query failure."))
 		}
 		p, err := c.readDoc(false)
 		if err != nil {
@@ -454,9 +454,9 @@ func (c *connection) receive() os.Error {
 		if err != nil {
 			r.fatal(err)
 		} else if s, ok := m["$err"].(string); ok {
-			r.fatal(os.NewError(s))
+			r.fatal(errors.New(s))
 		} else {
-			r.fatal(os.NewError("mongo: query failure"))
+			r.fatal(errors.New("mongo: query failure"))
 		}
 		return c.err
 	}
@@ -501,7 +501,7 @@ func (r *cursor) numberToReturn() uint32 {
 	return uint32(n)
 }
 
-func (r *cursor) Close() os.Error {
+func (r *cursor) Close() error {
 	if r.err != nil {
 		return nil
 	}
@@ -514,12 +514,12 @@ func (r *cursor) Close() os.Error {
 	if r.requestId != 0 && r.conn.cursors != nil {
 		delete(r.conn.cursors, r.requestId)
 	}
-	r.err = os.NewError("mongo: cursor closed")
+	r.err = errors.New("mongo: cursor closed")
 	r.conn = nil
 	return nil
 }
 
-func (r *cursor) fatal(err os.Error) os.Error {
+func (r *cursor) fatal(err error) error {
 	if r.err == nil {
 		r.Close()
 		r.err = err
@@ -527,7 +527,7 @@ func (r *cursor) fatal(err os.Error) os.Error {
 	return err
 }
 
-func (r *cursor) Error() os.Error {
+func (r *cursor) Error() error {
 	return r.err
 }
 
@@ -577,7 +577,7 @@ func (r *cursor) HasNext() bool {
 	return false
 }
 
-func (r *cursor) Next(value interface{}) os.Error {
+func (r *cursor) Next(value interface{}) error {
 	if !r.HasNext() {
 		return Done
 	}
@@ -593,7 +593,7 @@ func (r *cursor) Next(value interface{}) os.Error {
 		r.docs[0] = nil
 		r.docs = r.docs[1:]
 	case r.conn.cursor == r:
-		var err os.Error
+		var err error
 		p, err = r.conn.readDoc(false)
 		if err != nil {
 			return r.fatal(err)

@@ -15,14 +15,14 @@
 package mongo
 
 import (
-	"os"
+	"errors"
 	"bytes"
 	"strconv"
 )
 
 var DefaultLastErrorCmd interface{} = map[string]int{"getLastError": 1}
 
-var ErrNotFound = os.NewError("mongo: not found")
+var ErrNotFound = errors.New("mongo: not found")
 
 var (
 	upsertOptions      = &UpdateOptions{Upsert: true}
@@ -60,7 +60,7 @@ func (c Collection) Db() Database {
 	}
 }
 
-func (c Collection) checkError(err os.Error) (*MongoError, os.Error) {
+func (c Collection) checkError(err error) (*MongoError, error) {
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (c Collection) checkError(err os.Error) (*MongoError, os.Error) {
 }
 
 // Insert adds document to the collection.
-func (c Collection) Insert(documents ...interface{}) os.Error {
+func (c Collection) Insert(documents ...interface{}) error {
 	_, err := c.checkError(c.Conn.Insert(c.Namespace, nil, documents...))
 	return err
 }
@@ -79,7 +79,7 @@ func (c Collection) Insert(documents ...interface{}) os.Error {
 // Update updates the first document in the collection found by selector with
 // update. If a matching document is not found, then mongo.ErrNotFound is
 // returned.
-func (c Collection) Update(selector, update interface{}) os.Error {
+func (c Collection) Update(selector, update interface{}) error {
 	merr, err := c.checkError(c.Conn.Update(c.Namespace, selector, update, nil))
 	if merr != nil && err == nil && !merr.Updated {
 		err = ErrNotFound
@@ -89,7 +89,7 @@ func (c Collection) Update(selector, update interface{}) os.Error {
 
 // UpdateAll updates all documents matching selector with update. If no
 // matching documents are found, then mongo.ErrNotFound is returned.
-func (c Collection) UpdateAll(selector interface{}, update interface{}) os.Error {
+func (c Collection) UpdateAll(selector interface{}, update interface{}) error {
 	merr, err := c.checkError(c.Conn.Update(c.Namespace, selector, update, updateAllOptions))
 	if merr != nil && err == nil && !merr.Updated {
 		err = ErrNotFound
@@ -99,19 +99,19 @@ func (c Collection) UpdateAll(selector interface{}, update interface{}) os.Error
 
 // Upsert updates the first document found by selector with update. If no 
 // document is found, then the update is inserted instead.
-func (c Collection) Upsert(selector interface{}, update interface{}) os.Error {
+func (c Collection) Upsert(selector interface{}, update interface{}) error {
 	_, err := c.checkError(c.Conn.Update(c.Namespace, selector, update, upsertOptions))
 	return err
 }
 
 // RemoveFirst removes the first document found by selector.
-func (c Collection) RemoveFirst(selector interface{}) os.Error {
+func (c Collection) RemoveFirst(selector interface{}) error {
 	_, err := c.checkError(c.Conn.Remove(c.Namespace, selector, removeFirstOptions))
 	return err
 }
 
 // Remove removes all documents found by selector.
-func (c Collection) Remove(selector interface{}) os.Error {
+func (c Collection) Remove(selector interface{}) error {
 	_, err := c.checkError(c.Conn.Remove(c.Namespace, selector, nil))
 	return err
 }
@@ -177,7 +177,7 @@ type IndexOptions struct {
 // CreateIndex creates an index on keys.
 // 
 // More information: http://www.mongodb.org/display/DOCS/Indexes
-func (c Collection) CreateIndex(keys D, options *IndexOptions) os.Error {
+func (c Collection) CreateIndex(keys D, options *IndexOptions) error {
 	index := struct {
 		Keys      D      `bson:"key"`
 		Namespace string `bson:"ns"`

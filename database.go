@@ -15,7 +15,7 @@
 package mongo
 
 import (
-	"os"
+	"errors"
 	"strings"
 	"crypto/md5"
 	"encoding/hex"
@@ -43,7 +43,7 @@ type MongoError struct {
 	UpsertedId interface{} `bson:"upserted"`
 }
 
-func (e *MongoError) String() string {
+func (e *MongoError) Error() string {
 	return e.Err
 }
 
@@ -55,7 +55,7 @@ type CommandResponse struct {
 }
 
 // Error returns the error from the response or nil.
-func (s CommandResponse) Error() os.Error {
+func (s CommandResponse) Error() error {
 	if s.Ok {
 		return nil
 	}
@@ -65,7 +65,7 @@ func (s CommandResponse) Error() os.Error {
 		errmsg = "unspecified error"
 	}
 
-	return os.NewError(errmsg)
+	return errors.New(errmsg)
 }
 
 // Database represents a MongoDb database.
@@ -91,7 +91,7 @@ func (db Database) C(name string) Collection {
 	}
 }
 
-func runInternal(conn Conn, dbname string, cmd interface{}, options *FindOptions, result interface{}) os.Error {
+func runInternal(conn Conn, dbname string, cmd interface{}, options *FindOptions, result interface{}) error {
 	cursor, err := conn.Find(dbname+".$cmd", cmd, options)
 	if err != nil {
 		return err
@@ -103,7 +103,7 @@ func runInternal(conn Conn, dbname string, cmd interface{}, options *FindOptions
 // Run runs the command cmd on the database.
 // 
 // More information: http://www.mongodb.org/display/DOCS/Commands
-func (db Database) Run(cmd interface{}, result interface{}) os.Error {
+func (db Database) Run(cmd interface{}, result interface{}) error {
 	var d BSONData
 	err := runInternal(db.Conn, db.Name, cmd, runFindOptions, &d)
 	if err != nil {
@@ -129,7 +129,7 @@ func (db Database) Run(cmd interface{}, result interface{}) os.Error {
 // then the command {"getLasetError": 1} is used to get the error.
 //
 // More information: http://www.mongodb.org/display/DOCS/Last+Error+Commands
-func (db Database) LastError(cmd interface{}) (*MongoError, os.Error) {
+func (db Database) LastError(cmd interface{}) (*MongoError, error) {
 	if cmd == nil {
 		cmd = DefaultLastErrorCmd
 	}
@@ -139,7 +139,7 @@ func (db Database) LastError(cmd interface{}) (*MongoError, os.Error) {
 	}
 	err := runInternal(db.Conn, db.Name, cmd, runFindOptions, &r)
 	if err == nil {
-		err = r.Error()
+		err = r.CommandResponse.Error()
 		if err == nil && r.MongoError.Err != "" {
 			err = &r.MongoError
 		}
@@ -169,7 +169,7 @@ func passwordDigest(name, password string) string {
 }
 
 // Deference fetches the document specified by a database reference.
-func (db Database) Dereference(ref DBRef, slaveOk bool, result interface{}) os.Error {
+func (db Database) Dereference(ref DBRef, slaveOk bool, result interface{}) error {
 	if ref.Database != "" {
 		db.Name = ref.Database
 	}
@@ -178,7 +178,7 @@ func (db Database) Dereference(ref DBRef, slaveOk bool, result interface{}) os.E
 
 // AddUser creates a user with name and password. If the user already exists,
 // then the password is updated.
-func (db Database) AddUser(name, password string, readOnly bool) os.Error {
+func (db Database) AddUser(name, password string, readOnly bool) error {
 	users := db.C("system.users")
 	return users.Upsert(
 		M{"user": name},
@@ -189,13 +189,13 @@ func (db Database) AddUser(name, password string, readOnly bool) os.Error {
 }
 
 // RemoveUser removes user with name from the database.
-func (db Database) RemoveUser(name string) os.Error {
+func (db Database) RemoveUser(name string) error {
 	users := db.C("system.users")
 	return users.Remove(M{"user": name})
 }
 
 // Authenticate authenticates user with name and password to this database.
-func (db Database) Authenticate(name, password string) os.Error {
+func (db Database) Authenticate(name, password string) error {
 	var r struct {
 		CommandResponse
 		Nonce string `bson:"nonce"`

@@ -14,10 +14,7 @@
 
 package mongo
 
-import (
-	"os"
-	"reflect"
-)
+import "reflect"
 
 // Query represents a query to the database. 
 type Query struct {
@@ -153,7 +150,7 @@ func commandOptions(options *FindOptions) *FindOptions {
 
 // Count returns the number of documents that match the query. Limit and
 // skip are considered in the count.
-func (q *Query) Count() (int64, os.Error) {
+func (q *Query) Count() (int64, error) {
 	dbname, cname := SplitNamespace(q.Namespace)
 	cmd := D{{"count", cname}}
 	if q.Spec.Query != nil {
@@ -190,7 +187,7 @@ func (q *Query) simplifyQuery() interface{} {
 }
 
 // One executes the query and returns the first result. 
-func (q *Query) One(output interface{}) os.Error {
+func (q *Query) One(output interface{}) error {
 	q.Options.Limit = 1
 	q.Options.BatchSize = -1
 	cursor, err := q.Conn.Find(q.Namespace, q.simplifyQuery(), &q.Options)
@@ -203,7 +200,7 @@ func (q *Query) One(output interface{}) os.Error {
 
 // Cursor executes the query and returns a cursor over the results. Subsequent
 // changes to the query object are ignored by the cursor.
-func (q *Query) Cursor() (Cursor, os.Error) {
+func (q *Query) Cursor() (Cursor, error) {
 	return q.Conn.Find(q.Namespace, q.simplifyQuery(), &q.Options)
 }
 
@@ -211,7 +208,7 @@ func (q *Query) Cursor() (Cursor, os.Error) {
 // elements of slice must be valid document types (struct, map with string key)
 // or pointers to valid document types. The function returns the number of
 // documents in the result set.
-func (q *Query) Fill(slice interface{}) (n int, err os.Error) {
+func (q *Query) Fill(slice interface{}) (n int, err error) {
 	v := reflect.ValueOf(slice)
 	if q.Options.Limit == 0 || q.Options.Limit > v.Len() {
 		q.Options.Limit = v.Len()
@@ -233,7 +230,7 @@ func (q *Query) Fill(slice interface{}) (n int, err os.Error) {
 // Explain returns an explanation of how the server will execute the query.
 //
 // More information: http://www.mongodb.org/display/DOCS/Optimization#Optimization-Explain
-func (q *Query) Explain(result interface{}) os.Error {
+func (q *Query) Explain(result interface{}) error {
 	spec := q.Spec
 	spec.Explain = true
 	options := q.Options
@@ -252,7 +249,7 @@ func (q *Query) Explain(result interface{}) os.Error {
 // result set for this query.
 //
 // More information: http://www.mongodb.org/display/DOCS/Aggregation#Aggregation-Distinct
-func (q *Query) Distinct(key interface{}, result interface{}) os.Error {
+func (q *Query) Distinct(key interface{}, result interface{}) error {
 	dbname, cname := SplitNamespace(q.Namespace)
 	cmd := D{{"distinct", cname}, {"key", key}}
 	if q.Spec.Query != nil {
@@ -275,7 +272,7 @@ func (q *Query) Distinct(key interface{}, result interface{}) os.Error {
 // fields.
 //
 // Remove is a wrapper around the MongoDB findAndModify command.
-func (q *Query) Remove(result interface{}) os.Error {
+func (q *Query) Remove(result interface{}) error {
 	_, name := SplitNamespace(q.Namespace)
 	return q.findAndModify(
 		D{{"findAndModify", name}, {"remove", true}},
@@ -288,7 +285,7 @@ func (q *Query) Remove(result interface{}) os.Error {
 // documents and the Fields method to specify the returned fields.
 //
 // Update is a wrapper around the MongoDB findAndModify command.
-func (q *Query) Update(update interface{}, modified bool, result interface{}) os.Error {
+func (q *Query) Update(update interface{}, modified bool, result interface{}) error {
 	_, name := SplitNamespace(q.Namespace)
 	return q.findAndModify(
 		D{{"findAndModify", name}, {"update", update}, {"new", modified}},
@@ -302,14 +299,14 @@ func (q *Query) Update(update interface{}, modified bool, result interface{}) os
 // the Fields method to specify the returned fields.
 //
 // Upsert is a wrapper around the MongoDB findAndModify command.
-func (q *Query) Upsert(update interface{}, modified bool, result interface{}) os.Error {
+func (q *Query) Upsert(update interface{}, modified bool, result interface{}) error {
 	_, name := SplitNamespace(q.Namespace)
 	return q.findAndModify(
 		D{{"findAndModify", name}, {"update", update}, {"upsert", true}, {"new", modified}},
 		result)
 }
 
-func (q *Query) findAndModify(cmd D, result interface{}) os.Error {
+func (q *Query) findAndModify(cmd D, result interface{}) error {
 	dbname, _ := SplitNamespace(q.Namespace)
 	cmd.Append("query", q.Spec.Query)
 	if q.Spec.Sort != nil {

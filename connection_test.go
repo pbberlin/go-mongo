@@ -14,10 +14,7 @@
 
 package mongo
 
-import (
-	"testing"
-	"os"
-)
+import "testing"
 
 func dialAndDrop(t *testing.T, dbname, collectionName string) Collection {
 	c, err := Dial("127.0.0.1")
@@ -26,7 +23,7 @@ func dialAndDrop(t *testing.T, dbname, collectionName string) Collection {
 	}
 	db := Database{c, dbname, DefaultLastErrorCmd}
 	err = db.Run(D{{"drop", collectionName}}, nil)
-	if err != nil && err.String() != "ns not found" {
+	if err != nil && err.Error() != "ns not found" {
 		db.Conn.Close()
 		t.Fatal("drop", err)
 	}
@@ -149,7 +146,7 @@ Tests:
 		var r [2]Cursor
 
 		for i := 0; i < 2; i++ {
-			var err os.Error
+			var err error
 			r[i], err = c.Find(M{"r": i}).Sort(D{{"x", 1}}).BatchSize(2).Cursor()
 			if err != nil {
 				t.Fatal("find", err)

@@ -18,12 +18,12 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"reflect"
 	"strconv"
 	"sync"
 	"time"
 	"strings"
-	"os"
 )
 
 var emptyDoc = M{}
@@ -96,13 +96,13 @@ func NewObjectId() ObjectId {
 
 // NewObjectIdHex returns an object id initialized from the hexadecimal
 // encoding of the object id.
-func NewObjectIdHex(hexString string) (ObjectId, os.Error) {
+func NewObjectIdHex(hexString string) (ObjectId, error) {
 	p, err := hex.DecodeString(hexString)
 	if err != nil {
 		return "", err
 	}
 	if len(p) != 12 {
-		return "", os.NewError("mongo: bad object id string len")
+		return "", errors.New("mongo: bad object id string len")
 	}
 	return ObjectId(p), nil
 }
@@ -153,7 +153,7 @@ type BSONData struct {
 
 // Deocde decodes bd to v. See the Decode function for more information about
 // BSON decoding. 
-func (bd BSONData) Decode(v interface{}) os.Error {
+func (bd BSONData) Decode(v interface{}) error {
 	return decodeInternal(bd.Kind, bd.Data, v)
 }
 
@@ -287,7 +287,7 @@ func compileStructSpec(t reflect.Type, depth map[string]int, index []int, ss *st
 					case "c":
 						fs.conditional = true
 					default:
-						panic(os.NewError("bson: unknown field flag " + s + " for type " + t.Name()))
+						panic(errors.New("bson: unknown field flag " + s + " for type " + t.Name()))
 					}
 				}
 			}
@@ -367,11 +367,11 @@ func StructFields(t reflect.Type) interface{} {
 	return structSpecForType(t).fields
 }
 
-type aborted struct{ err os.Error }
+type aborted struct{ err error }
 
-func abort(err os.Error) { panic(aborted{err}) }
+func abort(err error) { panic(aborted{err}) }
 
-func handleAbort(err *os.Error) {
+func handleAbort(err *error) {
 	if r := recover(); r != nil {
 		if a, ok := r.(aborted); ok {
 			*err = a.err

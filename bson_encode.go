@@ -15,8 +15,8 @@
 package mongo
 
 import (
+	"errors"
 	"math"
-	"os"
 	"reflect"
 	"strconv"
 )
@@ -34,7 +34,7 @@ type EncodeTypeError struct {
 	Type reflect.Type
 }
 
-func (e *EncodeTypeError) String() string {
+func (e *EncodeTypeError) Error() string {
 	return "bson: unsupported type: " + e.Type.String()
 }
 
@@ -94,7 +94,7 @@ type encodeState struct {
 //
 // BSON cannot represent cyclic data structure and Encode does not handle them.
 // Passing cyclic structures to Encode will result in an infinite recursion.
-func Encode(buf []byte, doc interface{}) (result []byte, err os.Error) {
+func Encode(buf []byte, doc interface{}) (result []byte, err error) {
 	defer handleAbort(&err)
 
 	v := reflect.ValueOf(doc)
@@ -254,7 +254,7 @@ func encodeUint(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 		return
 	}
 	if int64(u) < 0 {
-		abort(os.NewError("bson: uint value does not fit in int64"))
+		abort(errors.New("bson: uint value does not fit in int64"))
 	}
 	if u <= math.MaxInt32 {
 		e.writeKindName(kindInt32, name)
@@ -289,7 +289,7 @@ func encodeUint64(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 		return
 	}
 	if int64(u) < 0 {
-		abort(os.NewError("bson: uint64 value does not fit in int64"))
+		abort(errors.New("bson: uint64 value does not fit in int64"))
 	}
 	e.writeKindName(kindInt64, name)
 	e.WriteUint64(u)
@@ -330,7 +330,7 @@ func encodeObjectId(e *encodeState, name string, fs *fieldSpec, v reflect.Value)
 		return
 	}
 	if len(oid) != 12 {
-		abort(os.NewError("bson: object id length != 12"))
+		abort(errors.New("bson: object id length != 12"))
 	}
 	e.writeKindName(kindObjectId, name)
 	copy(e.Next(12), oid)
@@ -374,7 +374,7 @@ func encodeMinMax(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	case -1:
 		e.writeKindName(kindMinValue, name)
 	default:
-		abort(os.NewError("bson: unknown MinMax value"))
+		abort(errors.New("bson: unknown MinMax value"))
 	}
 }
 

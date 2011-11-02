@@ -15,7 +15,6 @@
 package mongo
 
 import (
-	"os"
 	"log"
 	"sync"
 	"bytes"
@@ -44,13 +43,13 @@ type loggingConn struct {
 	id int
 }
 
-func (c loggingConn) Close() os.Error {
+func (c loggingConn) Close() error {
 	err := c.Conn.Close()
 	log.Printf("%d.Close() (err: %v)", c.id, err)
 	return err
 }
 
-func (c loggingConn) Update(namespace string, selector, update interface{}, options *UpdateOptions) os.Error {
+func (c loggingConn) Update(namespace string, selector, update interface{}, options *UpdateOptions) error {
 	err := c.Conn.Update(namespace, selector, update, options)
 	var buf bytes.Buffer
 	if options != nil {
@@ -65,7 +64,7 @@ func (c loggingConn) Update(namespace string, selector, update interface{}, opti
 	return err
 }
 
-func (c loggingConn) Insert(namespace string, options *InsertOptions, documents ...interface{}) os.Error {
+func (c loggingConn) Insert(namespace string, options *InsertOptions, documents ...interface{}) error {
 	err := c.Conn.Insert(namespace, options, documents...)
 	var buf bytes.Buffer
 	if options != nil {
@@ -77,7 +76,7 @@ func (c loggingConn) Insert(namespace string, options *InsertOptions, documents 
 	return err
 }
 
-func (c loggingConn) Remove(namespace string, selector interface{}, options *RemoveOptions) os.Error {
+func (c loggingConn) Remove(namespace string, selector interface{}, options *RemoveOptions) error {
 	err := c.Conn.Remove(namespace, selector, options)
 	var buf bytes.Buffer
 	if options != nil {
@@ -89,7 +88,7 @@ func (c loggingConn) Remove(namespace string, selector interface{}, options *Rem
 	return err
 }
 
-func (c loggingConn) Find(namespace string, query interface{}, options *FindOptions) (Cursor, os.Error) {
+func (c loggingConn) Find(namespace string, query interface{}, options *FindOptions) (Cursor, error) {
 	r, err := c.Conn.Find(namespace, query, options)
 	var id int
 	if r != nil {
@@ -139,13 +138,13 @@ type logCursor struct {
 	id int
 }
 
-func (r logCursor) Close() os.Error {
+func (r logCursor) Close() error {
 	err := r.Cursor.Close()
 	log.Printf("%d.Close() (%v)", r.id, err)
 	return err
 }
 
-func (r logCursor) Next(value interface{}) os.Error {
+func (r logCursor) Next(value interface{}) error {
 	var bd BSONData
 	err := r.Cursor.Next(&bd)
 	var m M
