@@ -170,7 +170,7 @@ func (q *Query) Count() (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return r.N, r.Error()
+	return r.N, r.Err()
 }
 
 // simplifyQuery returns the simplest representation of the query. 
@@ -263,7 +263,7 @@ func (q *Query) Distinct(key interface{}, result interface{}) error {
 	if err := runInternal(q.Conn, dbname, cmd, commandOptions(&q.Options), &r); err != nil {
 		return err
 	}
-	return r.Error()
+	return r.Err()
 }
 
 // Remove returns the first document matching the query after removing the
@@ -324,5 +324,5 @@ func (q *Query) findAndModify(cmd D, result interface{}) error {
 	if err != nil {
 		return err
 	}
-	return r.Error()
+	return r.Err()
 }

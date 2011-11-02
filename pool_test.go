@@ -25,7 +25,7 @@ type fakeConn struct {
 }
 
 func (c *fakeConn) Close() error { c.klosed = true; return nil }
-func (c *fakeConn) Error() error { return c.err }
+func (c *fakeConn) Err() error   { return c.err }
 func (c *fakeConn) Update(namespace string, selector, update interface{}, options *UpdateOptions) error {
 	return nil
 }

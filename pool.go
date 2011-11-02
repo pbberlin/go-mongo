@@ -98,7 +98,7 @@ func (c *pooledConnection) Close() error {
 	if c.Conn == nil {
 		return nil
 	}
-	if c.Error() != nil {
+	if c.Err() != nil {
 		return nil
 	}
 	select {

@@ -55,7 +55,7 @@ type CommandResponse struct {
 }
 
 // Error returns the error from the response or nil.
-func (s CommandResponse) Error() error {
+func (s CommandResponse) Err() error {
 	if s.Ok {
 		return nil
 	}
@@ -113,7 +113,7 @@ func (db Database) Run(cmd interface{}, result interface{}) error {
 	if err := Decode(d.Data, &r); err != nil {
 		return err
 	}
-	if err := r.Error(); err != nil {
+	if err := r.Err(); err != nil {
 		return err
 	}
 
@@ -139,7 +139,7 @@ func (db Database) LastError(cmd interface{}) (*MongoError, error) {
 	}
 	err := runInternal(db.Conn, db.Name, cmd, runFindOptions, &r)
 	if err == nil {
-		err = r.CommandResponse.Error()
+		err = r.CommandResponse.Err()
 		if err == nil && r.MongoError.Err != "" {
 			err = &r.MongoError
 		}
@@ -203,7 +203,7 @@ func (db Database) Authenticate(name, password string) error {
 	if err := runInternal(db.Conn, db.Name, M{"getnonce": 1}, runFindOptions, &r); err != nil {
 		return err
 	}
-	if err := r.Error(); err != nil {
+	if err := r.Err(); err != nil {
 		return err
 	}
 	h := md5.New()
@@ -217,5 +217,5 @@ func (db Database) Authenticate(name, password string) error {
 	if err := runInternal(db.Conn, db.Name, cmd, runFindOptions, &s); err != nil {
 		return err
 	}
-	return s.Error()
+	return s.Err()
 }

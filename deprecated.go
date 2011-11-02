@@ -158,7 +158,7 @@ func findAndModify(conn Conn, namespace string, cmd Doc, options *FindAndModifyO
 	if err := FindOne(conn, commandNamespace(namespace), cmd, nil, &r); err != nil {
 		return err
 	}
-	if err := r.Error(); err != nil {
+	if err := r.Err(); err != nil {
 		return err
 	}
 	return r.Value.Decode(result)
@@ -241,7 +241,7 @@ func (c Collection) findAndModify(cmd interface{}, result interface{}) error {
 	if err := cursor.Next(&r); err != nil {
 		return err
 	}
-	if err := r.Error(); err != nil {
+	if err := r.Err(); err != nil {
 		return err
 	}
 	return r.Value.Decode(result)

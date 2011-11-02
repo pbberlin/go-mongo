@@ -116,7 +116,7 @@ func (c *connection) Close() (err error) {
 	return err
 }
 
-func (c *connection) Error() error {
+func (c *connection) Err() error {
 	return c.err
 }
 
@@ -527,7 +527,7 @@ func (r *cursor) fatal(err error) error {
 	return err
 }
 
-func (r *cursor) Error() error {
+func (r *cursor) Err() error {
 	return r.err
 }
 

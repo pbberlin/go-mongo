@@ -108,7 +108,7 @@ type Conn interface {
 	Close() error
 
 	// Error returns non-nil if the connection has a permanent error.
-	Error() error
+	Err() error
 
 	// Update document specified by selector with update.
 	Update(namespace string, selector, update interface{}, options *UpdateOptions) error
@@ -146,15 +146,15 @@ type Conn interface {
 //	}
 //
 // Tailable cursors are supported. When working with a tailable cursor, use the
-// expression cursor.Error() != nil to determine if the cursor is "dead." See
+// expression cursor.Err() != nil to determine if the cursor is "dead." See
 // http://www.mongodb.org/display/DOCS/Tailable+Cursors for more discussion on
 // tailable cursors.
 type Cursor interface {
 	// Close releases the resources used by this connection. 
 	Close() error
 
-	// Error returns non-nil if the cursor has a permanent error. 
-	Error() error
+	// Err returns non-nil if the cursor has a permanent error. 
+	Err() error
 
 	// HasNext returns true if there are more documents to retrieve.
 	HasNext() bool
