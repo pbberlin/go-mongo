@@ -15,10 +15,10 @@
 package mongo
 
 import (
-	"errors"
-	"strings"
 	"crypto/md5"
 	"encoding/hex"
+	"errors"
+	"strings"
 )
 
 var (

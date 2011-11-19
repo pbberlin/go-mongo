@@ -481,6 +481,9 @@ func decodeSlice(d *decodeState, kind int, v reflect.Value) {
 		d.decodeValue(kind, v.Index(i))
 		i += 1
 	}
+	if v.IsNil() {
+		v.Set(reflect.MakeSlice(t, 0, 0))
+	}
 	d.endDoc(offset)
 }
 
@@ -550,7 +553,7 @@ func (d *decodeState) decodeValueInterface(kind int) interface{} {
 		d.endDoc(offset)
 		return m
 	case kindArray:
-		var a []interface{}
+		a := make([]interface{}, 0)
 		offset := d.beginDoc()
 		for {
 			kind, _ := d.scanKindName()

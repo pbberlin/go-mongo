@@ -21,9 +21,9 @@ import (
 	"errors"
 	"reflect"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
-	"strings"
 )
 
 var emptyDoc = M{}

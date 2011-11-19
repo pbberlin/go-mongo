@@ -16,10 +16,10 @@ package mongo
 
 import (
 	"bytes"
-	"testing"
-	"reflect"
-	"time"
 	"math"
+	"reflect"
+	"testing"
+	"time"
 )
 
 func testMap(value interface{}) map[string]interface{} {

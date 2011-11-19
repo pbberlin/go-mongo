@@ -15,8 +15,8 @@
 package mongo
 
 import (
-	"errors"
 	"bytes"
+	"errors"
 	"strconv"
 )
 

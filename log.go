@@ -15,10 +15,10 @@
 package mongo
 
 import (
-	"log"
-	"sync"
 	"bytes"
 	"fmt"
+	"log"
+	"sync"
 )
 
 var (
