@@ -165,7 +165,7 @@ type DBRef struct {
 func passwordDigest(name, password string) string {
 	h := md5.New()
 	h.Write([]byte(name + ":mongo:" + password))
-	return hex.EncodeToString(h.Sum())
+	return hex.EncodeToString(h.Sum(nil))
 }
 
 // Deference fetches the document specified by a database reference.
@@ -209,7 +209,7 @@ func (db Database) Authenticate(name, password string) error {
 	h := md5.New()
 	h.Write([]byte(r.Nonce + name))
 	h.Write([]byte(passwordDigest(name, password)))
-	key := hex.EncodeToString(h.Sum())
+	key := hex.EncodeToString(h.Sum(nil))
 
 	cmd := D{{"authenticate", 1}, {"user", name}, {"nonce", r.Nonce}, {"key", key}}
 

@@ -28,10 +28,6 @@ import (
 
 var emptyDoc = M{}
 
-// DateTime represents a BSON datetime. The value is in milliseconds since the
-// Unix epoch.
-type DateTime int64
-
 // Timestamp represents a BSON timesamp.
 type Timestamp int64
 
@@ -64,12 +60,13 @@ func (id ObjectId) String() string {
 	return hex.EncodeToString([]byte(string(id)))
 }
 
-func newObjectId(t int64, c uint64) ObjectId {
+func newObjectId(t time.Time, c uint64) ObjectId {
+	u := t.Unix()
 	b := [12]byte{
-		byte(t >> 24),
-		byte(t >> 16),
-		byte(t >> 8),
-		byte(t),
+		byte(u >> 24),
+		byte(u >> 16),
+		byte(u >> 8),
+		byte(u),
 		byte(c >> 56),
 		byte(c >> 48),
 		byte(c >> 40),
@@ -91,7 +88,7 @@ func newObjectId(t int64, c uint64) ObjectId {
 //          This ensures that object ids are unique, but is simpler than 
 //          the format used by other drivers.
 func NewObjectId() ObjectId {
-	return newObjectId(time.Seconds(), nextOidCounter())
+	return newObjectId(time.Now(), nextOidCounter())
 }
 
 // NewObjectIdHex returns an object id initialized from the hexadecimal
@@ -109,22 +106,22 @@ func NewObjectIdHex(hexString string) (ObjectId, error) {
 
 // MaxObjectIdForTime returns the maximum object id for time t in seconds from
 // the epoch.
-func MaxObjectIdForTime(t int64) ObjectId {
+func MaxObjectIdForTime(t time.Time) ObjectId {
 	return newObjectId(t, 0xffffffffffffffff)
 }
 
 // MinObjectIdForTime returns the minimum object id for time t in seconds from
 // the epoch.
-func MinObjectIdForTime(t int64) ObjectId {
+func MinObjectIdForTime(t time.Time) ObjectId {
 	return newObjectId(t, 0)
 }
 
 // CreationTime extracts the time the object id was created in seconds since the epoch.
-func (id ObjectId) CreationTime() int64 {
+func (id ObjectId) CreationTime() time.Time {
 	if len(id) != 12 {
-		return 0
+		return time.Time{}
 	}
-	return int64(id[0])<<24 + int64(id[1])<<16 + int64(id[2])<<8 + int64(id[3])
+	return time.Unix(int64(id[0])<<24+int64(id[1])<<16+int64(id[2])<<8+int64(id[3]), 0)
 }
 
 var (

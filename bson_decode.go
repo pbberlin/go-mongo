@@ -18,6 +18,7 @@ import (
 	"errors"
 	"math"
 	"reflect"
+	"time"
 )
 
 var ErrEOD = errors.New("bson: unexpected end of data when parsing BSON")
@@ -306,13 +307,13 @@ func decodeTimestamp(d *decodeState, kind int, v reflect.Value) {
 	}
 }
 
-func decodeDateTime(d *decodeState, kind int, v reflect.Value) {
+func decodeTime(d *decodeState, kind int, v reflect.Value) {
 	switch kind {
 	default:
 		d.saveErrorAndSkip(kind, v.Type())
 		return
-	case kindInt64, kindDateTime:
-		decodeInt(d, kindInt64, v)
+	case kindDateTime:
+		v.Set(reflect.ValueOf(time.Unix(0, d.scanInt64()*int64(time.Millisecond))))
 	}
 }
 
@@ -574,7 +575,7 @@ func (d *decodeState) decodeValueInterface(kind int) interface{} {
 	case kindBool:
 		return d.scanBool()
 	case kindDateTime:
-		return DateTime(d.scanInt64())
+		return time.Unix(0, d.scanInt64()*int64(time.Millisecond))
 	case kindNull:
 		return nil
 	case kindSymbol:
@@ -649,7 +650,7 @@ func init() {
 	}
 	typeDecoder = map[reflect.Type]decoderFunc{
 		reflect.TypeOf(BSONData{}):                   decodeBSONData,
-		reflect.TypeOf(DateTime(0)):                  decodeDateTime,
+		reflect.TypeOf(time.Time{}):                  decodeTime,
 		reflect.TypeOf(MinMax(0)):                    decodeMinMax,
 		reflect.TypeOf(ObjectId("")):                 decodeObjectId,
 		reflect.TypeOf(Symbol("")):                   decodeString,

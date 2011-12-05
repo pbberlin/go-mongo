@@ -19,6 +19,7 @@ import (
 	"math"
 	"reflect"
 	"strconv"
+	"time"
 )
 
 var (
@@ -378,6 +379,15 @@ func encodeMinMax(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	}
 }
 
+func encodeTime(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
+	t := v.Interface().(time.Time)
+	if t.IsZero() && fs.conditional {
+		return
+	}
+	e.writeKindName(kindDateTime, name)
+	e.WriteUint64(uint64(t.UnixNano() / int64(time.Millisecond)))
+}
+
 func encodeStruct(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	e.writeKindName(kindDocument, name)
 	e.writeStruct(v)
@@ -492,12 +502,10 @@ func init() {
 			encodeString(e, kindCode, name, fs, value)
 		},
 		reflect.TypeOf(CodeWithScope{}): encodeCodeWithScope,
-		reflect.TypeOf(DateTime(0)): func(e *encodeState, name string, fs *fieldSpec, value reflect.Value) {
-			encodeInt64(e, kindDateTime, name, fs, value)
-		},
-		reflect.TypeOf(MinMax(0)):    encodeMinMax,
-		reflect.TypeOf(ObjectId("")): encodeObjectId,
-		reflect.TypeOf(Regexp{}):     encodeRegexp,
+		reflect.TypeOf(time.Time{}):     encodeTime,
+		reflect.TypeOf(MinMax(0)):       encodeMinMax,
+		reflect.TypeOf(ObjectId("")):    encodeObjectId,
+		reflect.TypeOf(Regexp{}):        encodeRegexp,
 		reflect.TypeOf(Symbol("")): func(e *encodeState, name string, fs *fieldSpec, value reflect.Value) {
 			encodeString(e, kindSymbol, name, fs, value)
 		},

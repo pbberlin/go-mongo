@@ -48,6 +48,12 @@ type stBinary struct {
 	Test []byte `bson:"test/c"`
 }
 
+//type myBytes []byte
+
+//type stMyBytes struct {
+//	Test myBytes `bson:"test/c"`
+//}
+
 type stObjectId struct {
 	Test ObjectId `bson:"test/c"`
 }
@@ -108,8 +114,8 @@ type stInt64 struct {
 	Test int64 `bson:"test/c"`
 }
 
-type stDateTime struct {
-	Test DateTime `bson:"test/c"`
+type stTime struct {
+	Test time.Time `bson:"test/c"`
 }
 
 type stTimestamp struct {
@@ -149,9 +155,13 @@ type stEmbed struct {
 var empty = map[string]interface{}{}
 
 var bsonTests = []struct {
-	sv   interface{}
-	mv   map[string]interface{}
-	dmv  map[string]interface{}
+	// struct value
+	sv interface{}
+	// map value
+	mv map[string]interface{}
+	// decoded map value
+	dmv map[string]interface{}
+	// data
 	data string
 }{
 	// Test conditional 
@@ -161,6 +171,7 @@ var bsonTests = []struct {
 	{stAny{}, empty, empty, "\x05\x00\x00\x00\x00"},
 	{stDoc{}, empty, empty, "\x05\x00\x00\x00\x00"},
 	{stBinary{}, empty, empty, "\x05\x00\x00\x00\x00"},
+	//	{stMyBytes{}, empty, empty, "\x05\x00\x00\x00\x00"},
 	{stObjectId{}, empty, empty, "\x05\x00\x00\x00\x00"},
 	{stBool{}, empty, empty, "\x05\x00\x00\x00\x00"},
 	{stSymbol{}, empty, empty, "\x05\x00\x00\x00\x00"},
@@ -179,7 +190,7 @@ var bsonTests = []struct {
 	{stCodeWithScope{}, empty, empty, "\x05\x00\x00\x00\x00"},
 	{stRegexp{}, empty, empty, "\x05\x00\x00\x00\x00"},
 	{stTimestamp{}, empty, empty, "\x05\x00\x00\x00\x00"},
-	{stDateTime{}, empty, empty, "\x05\x00\x00\x00\x00"},
+	{stTime{}, empty, empty, "\x05\x00\x00\x00\x00"},
 
 	{
 		stEmpty{},
@@ -223,6 +234,12 @@ var bsonTests = []struct {
 		testMap([]byte("test")),
 		"\x14\x00\x00\x00\x05\x74\x65\x73\x74\x00\x04\x00\x00\x00\x00\x74\x65\x73\x74\x00",
 	},
+	//	{
+	//		stMyBytes{myBytes([]byte("test"))},
+	//		testMap(myBytes([]byte("test"))),
+	//		testMap([]byte("test")),
+	//		"\x14\x00\x00\x00\x05\x74\x65\x73\x74\x00\x04\x00\x00\x00\x00\x74\x65\x73\x74\x00",
+	//	},
 	{
 		stObjectId{ObjectId("\x4C\x9B\x8F\xB4\xA3\x82\xAA\xFE\x17\xC8\x6E\x63")},
 		testMap(ObjectId("\x4C\x9B\x8F\xB4\xA3\x82\xAA\xFE\x17\xC8\x6E\x63")),
@@ -360,9 +377,9 @@ var bsonTests = []struct {
 	},
 
 	{
-		stDateTime{1168216211000},
-		testMap(DateTime(1168216211000)),
-		testMap(DateTime(1168216211000)),
+		stTime{time.Unix(0, 1168216211000*int64(time.Millisecond))},
+		testMap(time.Unix(0, 1168216211000*int64(time.Millisecond))),
+		testMap(time.Unix(0, 1168216211000*int64(time.Millisecond))),
 		"\x13\x00\x00\x00\ttest\x008\xbe\x1c\xff\x0f\x01\x00\x00\x00",
 	},
 
@@ -457,8 +474,7 @@ var decodeConversionTests = []struct {
 	{float64(10), stBool{true}},
 	{float64(0), stBool{false}},
 
-	{DateTime(333), stDateTime{333}},
-	{DateTime(333), stInt64{333}},
+	{time.Unix(0, int64(time.Millisecond*333)), stInt64{333}},
 
 	{Symbol("hello"), stSymbol{"hello"}},
 	{Symbol("hello"), stString{"hello"}},
@@ -581,18 +597,18 @@ func TestEncodeOrderedMapOld(t *testing.T) {
 }
 
 func TestObjectId(t *testing.T) {
-	t1 := time.Seconds()
+	t1 := time.Now()
 	min := MinObjectIdForTime(t1)
 	id := NewObjectId()
-	max := MaxObjectIdForTime(time.Seconds())
+	max := MaxObjectIdForTime(time.Now())
 	if id < min {
 		t.Errorf("%q < %q", id, min)
 	}
 	if id > max {
 		t.Errorf("%q > %q", id, max)
 	}
-	if min.CreationTime() != t1 {
-		t.Errorf("min.CreationTime() = %d, want %d", min.CreationTime(), t1)
+	if min.CreationTime().Unix() != t1.Unix() {
+		t.Errorf("min.CreationTime() = %v, want %v", min.CreationTime(), t1)
 	}
 	id2, err := NewObjectIdHex(id.String())
 	if err != nil {
@@ -602,7 +618,7 @@ func TestObjectId(t *testing.T) {
 		t.Errorf("%q != %q", id2, id)
 	}
 	t2 := ObjectId("").CreationTime()
-	if t2 != 0 {
+	if !t2.IsZero() {
 		t.Error("creation time for invalid id = %d, want 0", t1)
 	}
 }
