@@ -48,11 +48,11 @@ type stBinary struct {
 	Test []byte `bson:"test/c"`
 }
 
-//type myBytes []byte
+type myBytes []byte
 
-//type stMyBytes struct {
-//	Test myBytes `bson:"test/c"`
-//}
+type stMyBytes struct {
+	Test myBytes `bson:"test/c"`
+}
 
 type stObjectId struct {
 	Test ObjectId `bson:"test/c"`
@@ -171,7 +171,7 @@ var bsonTests = []struct {
 	{stAny{}, empty, empty, "\x05\x00\x00\x00\x00"},
 	{stDoc{}, empty, empty, "\x05\x00\x00\x00\x00"},
 	{stBinary{}, empty, empty, "\x05\x00\x00\x00\x00"},
-	//	{stMyBytes{}, empty, empty, "\x05\x00\x00\x00\x00"},
+	{stMyBytes{}, empty, empty, "\x05\x00\x00\x00\x00"},
 	{stObjectId{}, empty, empty, "\x05\x00\x00\x00\x00"},
 	{stBool{}, empty, empty, "\x05\x00\x00\x00\x00"},
 	{stSymbol{}, empty, empty, "\x05\x00\x00\x00\x00"},
@@ -234,12 +234,12 @@ var bsonTests = []struct {
 		testMap([]byte("test")),
 		"\x14\x00\x00\x00\x05\x74\x65\x73\x74\x00\x04\x00\x00\x00\x00\x74\x65\x73\x74\x00",
 	},
-	//	{
-	//		stMyBytes{myBytes([]byte("test"))},
-	//		testMap(myBytes([]byte("test"))),
-	//		testMap([]byte("test")),
-	//		"\x14\x00\x00\x00\x05\x74\x65\x73\x74\x00\x04\x00\x00\x00\x00\x74\x65\x73\x74\x00",
-	//	},
+	{
+		stMyBytes{myBytes([]byte("test"))},
+		testMap(myBytes([]byte("test"))),
+		testMap([]byte("test")),
+		"\x14\x00\x00\x00\x05\x74\x65\x73\x74\x00\x04\x00\x00\x00\x00\x74\x65\x73\x74\x00",
+	},
 	{
 		stObjectId{ObjectId("\x4C\x9B\x8F\xB4\xA3\x82\xAA\xFE\x17\xC8\x6E\x63")},
 		testMap(ObjectId("\x4C\x9B\x8F\xB4\xA3\x82\xAA\xFE\x17\xC8\x6E\x63")),

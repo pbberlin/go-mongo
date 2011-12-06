@@ -81,9 +81,9 @@ type encodeState struct {
 //      int64, uint64       -> Integer64
 //      string              -> String
 //      []byte              -> Binary data
+//      time.Time           -> UTC Datetime
 //      mongo.Code          -> Javascript code
 //      mongo.CodeWithScope -> Javascript code with scope
-//      mongo.DateTime      -> UTC Datetime
 //      mongo.D             -> Document. Use when element order is important.
 //      mongo.MinMax        -> Minimum / Maximum value
 //      mongo.ObjectId      -> ObjectId
@@ -420,7 +420,7 @@ func encodeDoc(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 }
 
 func encodeByteSlice(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
-	b := v.Interface().([]byte)
+	b := v.Bytes()
 	if b == nil {
 		return
 	}
@@ -432,6 +432,10 @@ func encodeByteSlice(e *encodeState, name string, fs *fieldSpec, v reflect.Value
 
 func encodeSlice(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	if v.IsNil() {
+		return
+	}
+	if v.Type().Elem().Kind() == reflect.Uint8 {
+		encodeByteSlice(e, name, fs, v)
 		return
 	}
 	encodeArray(e, name, fs, v)
@@ -512,6 +516,5 @@ func init() {
 		reflect.TypeOf(Timestamp(0)): func(e *encodeState, name string, fs *fieldSpec, value reflect.Value) {
 			encodeInt64(e, kindTimestamp, name, fs, value)
 		},
-		reflect.TypeOf([]byte{}): encodeByteSlice,
 	}
 }

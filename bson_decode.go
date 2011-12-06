@@ -56,7 +56,7 @@ func (e *DecodeTypeError) Error() string {
 //      Array               -> []interface{}, other slice types
 //      Binary              -> []byte
 //      Boolean             -> bool
-//      Datetime            -> mongo.Datetime, int64
+//      Datetime            -> time.Time, int64
 //      Document            -> map[string]interface{}, struct types
 //      Double              -> signed and unsigned integers, floats, bool
 //      MinValue, MaxValue  -> mongo.MinMax
@@ -455,11 +455,15 @@ func decodeMap(d *decodeState, kind int, v reflect.Value) {
 }
 
 func decodeSlice(d *decodeState, kind int, v reflect.Value) {
+	t := v.Type()
+	if kind == kindBinary && t.Elem().Kind() == reflect.Uint8 {
+		decodeByteSlice(d, kind, v)
+		return
+	}
 	if kind != kindArray {
 		d.saveErrorAndSkip(kind, v.Type())
 		return
 	}
-	t := v.Type()
 	offset := d.beginDoc()
 	i := 0
 	for {
@@ -655,7 +659,6 @@ func init() {
 		reflect.TypeOf(ObjectId("")):                 decodeObjectId,
 		reflect.TypeOf(Symbol("")):                   decodeString,
 		reflect.TypeOf(Timestamp(0)):                 decodeTimestamp,
-		reflect.TypeOf([]byte{}):                     decodeByteSlice,
 		reflect.TypeOf(make(map[string]interface{})): decodeMapStringInterface,
 		reflect.TypeOf(M{}):                          decodeMapStringInterface,
 		reflect.TypeOf(new(interface{})).Elem():      decodeInterface,
