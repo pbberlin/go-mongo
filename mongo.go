@@ -20,6 +20,9 @@
 //
 // The Database, Collection and Query types provide a number of convenience
 // methods for working with Conn objects. 
+//
+// Conn objects are not thread-safe. Multi-threaded applications are
+// responsible for serializing access to Conn objects.  
 package mongo
 
 import "errors"
