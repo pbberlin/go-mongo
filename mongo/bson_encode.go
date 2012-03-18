@@ -24,7 +24,6 @@ import (
 
 var (
 	typeD        = reflect.TypeOf(D{})
-	typeDoc      = reflect.TypeOf(Doc{})
 	typeBSONData = reflect.TypeOf(BSONData{})
 	idKey        = reflect.ValueOf("_id")
 	itoas        = [...]string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"}
@@ -107,8 +106,6 @@ func Encode(buf []byte, doc interface{}) (result []byte, err error) {
 	switch v.Type() {
 	case typeD:
 		e.writeD(v.Interface().(D))
-	case typeDoc:
-		e.writeDoc(v.Interface().(Doc))
 	case typeBSONData:
 		bd := v.Interface().(BSONData)
 		if bd.Kind != kindDocument {
@@ -181,15 +178,6 @@ func (e *encodeState) writeMap(v reflect.Value, topLevel bool) {
 }
 
 func (e *encodeState) writeD(v D) {
-	offset := e.beginDoc()
-	for _, kv := range v {
-		e.encodeValue(kv.Key, defaultFieldSpec, reflect.ValueOf(kv.Value))
-	}
-	e.WriteByte(0)
-	e.endDoc(offset)
-}
-
-func (e *encodeState) writeDoc(v Doc) {
 	offset := e.beginDoc()
 	for _, kv := range v {
 		e.encodeValue(kv.Key, defaultFieldSpec, reflect.ValueOf(kv.Value))
@@ -410,15 +398,6 @@ func encodeD(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	e.writeD(d)
 }
 
-func encodeDoc(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
-	d := v.Interface().(Doc)
-	if d == nil {
-		return
-	}
-	e.writeKindName(kindDocument, name)
-	e.writeDoc(d)
-}
-
 func encodeByteSlice(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	b := v.Bytes()
 	if b == nil {
@@ -499,7 +478,6 @@ func init() {
 		reflect.Struct: encodeStruct,
 	}
 	typeEncoder = map[reflect.Type]encoderFunc{
-		typeDoc:      encodeDoc,
 		typeD:        encodeD,
 		typeBSONData: encodeBSONData,
 		reflect.TypeOf(Code("")): func(e *encodeState, name string, fs *fieldSpec, value reflect.Value) {

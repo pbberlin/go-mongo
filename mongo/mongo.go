@@ -27,9 +27,8 @@ package mongo
 
 import "errors"
 
-var (
-	Done = errors.New("mongo: cursor has no more results")
-)
+// Cursor has no more results.
+var Done = errors.New("mongo: cursor has no more results")
 
 // InsertOptions specifies options for the Conn.Insert method.
 type InsertOptions struct {
