@@ -19,68 +19,17 @@ Features:
 Installation
 ------------
 
-Go-Mongo requires a working Go development environment. The 
-[Getting Started](http://golang.org/doc/install.html) 
-document describes how to install the development environment. Once you have Go
-up and running, you can install Go-Mongo with a single command:
+Use the [go tool](http://weekly.golang.org/cmd/go/#Download_and_install_packages_and_dependencies) to install Go-Mongo:
 
-    goinstall github.com/garyburd/go-mongo
+    go get  github.com/garyburd/go-mongo/mongo
 
 The Go distribution is Go-Mongo's only dependency. 
   
 Documentation
 -------------
  
- * [Package Reference](http://gopkgdoc.appspot.com/pkg/github.com/garyburd/go-mongo)
- * [Examples](https://github.com/garyburd/go-mongo-examples)
-
-Example
--------
-
-    package main
-
-    import (
-        "github.com/garyburd/go-mongo"
-        "log"
-    )
-
-    type ExampleDoc struct {
-        Id    mongo.ObjectId `bson:"_id"`
-        Title string
-        Body  string
-    }
-
-    func main() {
-
-        // Connect to server.
-
-        conn, err := mongo.Dial("localhost")
-        if err != nil {
-            log.Fatal(err)
-        }
-        defer conn.Close()
-
-        c := mongo.Collection{conn, "example-db.example-collection", mongo.DefaultLastErrorCmd}
-
-        // Insert a document.
-
-        id := mongo.NewObjectId()
-
-        err = c.Insert(&ExampleDoc{Id: id, Title: "Hello", Body: "Mongo is fun."})
-        if err != nil {
-            log.Fatal(err)
-        }
-
-        // Find the document.
-
-        var doc ExampleDoc
-        err = c.Find(map[string]interface{}{"_id": id}).One(&doc)
-        if err != nil {
-            log.Fatal(err)
-        }
-
-        log.Print(doc.Title, " ", doc.Body)
-    }
+ * [Package Reference](http://gopkgdoc.appspot.com/pkg/github.com/garyburd/go-mongo/mongo)
+ * [Example](https://github.com/garyburd/go-mongo/tree/master/examples/little-book)
 
 License
 -------
