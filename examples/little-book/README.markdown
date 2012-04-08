@@ -6,5 +6,5 @@ Use the go command to run the example:
     go run main.go
 
 The application logs all traffic to and from the MongoDB server using
-Go-Mongo's [logging connection wrapper](http://gopkgdoc.appspot.com/go-mongo/mongo@newLoggingCon).
+Go-Mongo's [logging connection wrapper](http://gopkgdoc.appspot.com/pkg/github.com/garyburd/go-mongo/mongo#NewLoggingConn).
 
