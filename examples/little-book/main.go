@@ -4,6 +4,7 @@ package main
 import (
 	"github.com/garyburd/go-mongo/mongo"
 	"log"
+	"os"
 	"time"
 )
 
@@ -499,7 +500,7 @@ func main() {
 
 	// Wrap connection with logger so that we can view the traffic to and from
 	// the server.
-	conn = mongo.NewLoggingConn(conn)
+	conn = mongo.NewLoggingConn(conn, log.New(os.Stdout, "", 0), "")
 
 	// Clear the log prefix for more readable output.
 	log.SetFlags(0)

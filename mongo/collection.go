@@ -157,21 +157,21 @@ type IndexOptions struct {
 	Name string `bson:"name"`
 
 	// Should this index guarantee uniqueness?
-	Unique bool `bson:"unique/c"`
+	Unique bool `bson:"unique,omitempty"`
 
 	// Should duplicates be dropped when creating a unique index?
-	DropDups bool `bson:"dropDups/c"`
+	DropDups bool `bson:"dropDups,omitempty"`
 
 	// Build index in background.
-	Background bool `bson:"background/c"`
+	Background bool `bson:"background,omitempty"`
 
 	// Do not index documents with missing key fields.
-	Sparse bool `bson:"sparse/c"`
+	Sparse bool `bson:"sparse,omitempty"`
 
 	// Geospatial options
 	Min  interface{} `bson:"min"`
 	Max  interface{} `bson:"max"`
-	Bits int         `bson:"bits/c"`
+	Bits int         `bson:"bits,omitempty"`
 }
 
 // CreateIndex creates an index on keys.

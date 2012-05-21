@@ -18,38 +18,30 @@ import (
 	"bytes"
 	"fmt"
 	"log"
-	"sync"
 )
-
-var (
-	logIdMutex sync.Mutex
-	logId      int
-)
-
-func newLogId() int {
-	logIdMutex.Lock()
-	defer logIdMutex.Unlock()
-	logId += 1
-	return logId
-}
 
 // NewLoggingConn returns logging wrapper around a connection.
-func NewLoggingConn(conn Conn) Conn {
-	return loggingConn{conn, newLogId()}
+func NewLoggingConn(conn Conn, log *log.Logger, prefix string) Conn {
+	if prefix != "" {
+		prefix = prefix + "."
+	}
+	return &loggingConn{conn, log, prefix, 0}
 }
 
 type loggingConn struct {
 	Conn
-	id int
+	log      *log.Logger
+	prefix   string
+	cursorId int
 }
 
-func (c loggingConn) Close() error {
+func (c *loggingConn) Close() error {
 	err := c.Conn.Close()
-	log.Printf("%d.Close() (err: %v)", c.id, err)
+	c.log.Printf("%sClose() (err: %v)", c.prefix, err)
 	return err
 }
 
-func (c loggingConn) Update(namespace string, selector, update interface{}, options *UpdateOptions) error {
+func (c *loggingConn) Update(namespace string, selector, update interface{}, options *UpdateOptions) error {
 	err := c.Conn.Update(namespace, selector, update, options)
 	var buf bytes.Buffer
 	if options != nil {
@@ -60,11 +52,11 @@ func (c loggingConn) Update(namespace string, selector, update interface{}, opti
 			buf.WriteString(", multi=true")
 		}
 	}
-	log.Printf("%d.Update(%+v, %+v, %+v%s) (%v)", c.id, namespace, selector, update, buf.String(), err)
+	c.log.Printf("%sUpdate(%+v, %+v, %+v%s) (%v)", c.prefix, namespace, selector, update, buf.String(), err)
 	return err
 }
 
-func (c loggingConn) Insert(namespace string, options *InsertOptions, documents ...interface{}) error {
+func (c *loggingConn) Insert(namespace string, options *InsertOptions, documents ...interface{}) error {
 	err := c.Conn.Insert(namespace, options, documents...)
 	var buf bytes.Buffer
 	if options != nil {
@@ -72,11 +64,11 @@ func (c loggingConn) Insert(namespace string, options *InsertOptions, documents 
 			buf.WriteString(", continue=true")
 		}
 	}
-	log.Printf("%d.Insert(%s%s, %+v) (%v)", c.id, namespace, buf.String(), documents, err)
+	c.log.Printf("%sInsert(%s%s, %+v) (%v)", c.prefix, namespace, buf.String(), documents, err)
 	return err
 }
 
-func (c loggingConn) Remove(namespace string, selector interface{}, options *RemoveOptions) error {
+func (c *loggingConn) Remove(namespace string, selector interface{}, options *RemoveOptions) error {
 	err := c.Conn.Remove(namespace, selector, options)
 	var buf bytes.Buffer
 	if options != nil {
@@ -84,16 +76,17 @@ func (c loggingConn) Remove(namespace string, selector interface{}, options *Rem
 			buf.WriteString(", single=true")
 		}
 	}
-	log.Printf("%d.Remove(%s, %+v%s) (%v)", c.id, namespace, selector, buf.String(), err)
+	c.log.Printf("%sRemove(%s, %+v%s) (%v)", c.prefix, namespace, selector, buf.String(), err)
 	return err
 }
 
-func (c loggingConn) Find(namespace string, query interface{}, options *FindOptions) (Cursor, error) {
+func (c *loggingConn) Find(namespace string, query interface{}, options *FindOptions) (Cursor, error) {
 	r, err := c.Conn.Find(namespace, query, options)
-	var id int
+	prefix := ""
 	if r != nil {
-		id = newLogId()
-		r = logCursor{r, id}
+		c.cursorId += 1
+		prefix = fmt.Sprintf("%s%d.", c.prefix, c.cursorId)
+		r = &logCursor{r, c.log, prefix}
 	}
 	var buf bytes.Buffer
 	if options != nil {
@@ -129,22 +122,23 @@ func (c loggingConn) Find(namespace string, query interface{}, options *FindOpti
 			fmt.Fprintf(&buf, ", batchSize:%d", options.BatchSize)
 		}
 	}
-	log.Printf("%d.Find(%s, %+v%s) (%d, %v)", c.id, namespace, query, buf.String(), id, err)
+	c.log.Printf("%sFind(%s, %+v%s) (%s, %v)", c.prefix, namespace, query, buf.String(), prefix[:len(prefix)-1], err)
 	return r, err
 }
 
 type logCursor struct {
 	Cursor
-	id int
+	log    *log.Logger
+	prefix string
 }
 
-func (r logCursor) Close() error {
+func (r *logCursor) Close() error {
 	err := r.Cursor.Close()
-	log.Printf("%d.Close() (%v)", r.id, err)
+	r.log.Printf("%sClose() (%v)", r.prefix, err)
 	return err
 }
 
-func (r logCursor) Next(value interface{}) error {
+func (r *logCursor) Next(value interface{}) error {
 	var bd BSONData
 	err := r.Cursor.Next(&bd)
 	var m M
@@ -152,6 +146,6 @@ func (r logCursor) Next(value interface{}) error {
 		err = Decode(bd.Data, value)
 		bd.Decode(&m)
 	}
-	log.Printf("%d.Next() (%v, %v)", r.id, m, err)
+	r.log.Printf("%sNext() (%v, %v)", r.prefix, m, err)
 	return err
 }

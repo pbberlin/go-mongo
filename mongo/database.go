@@ -159,7 +159,7 @@ type DBRef struct {
 	Id ObjectId `bson:"$id"`
 
 	// The target document's database (optional).
-	Database string `bson:"$db/c"`
+	Database string `bson:"$db,omitempty"`
 }
 
 func passwordDigest(name, password string) string {

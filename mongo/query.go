@@ -35,7 +35,7 @@ type QuerySpec struct {
 
 	// If set to true, then the query returns an explain plan record the query.
 	// See http://www.mongodb.org/display/DOCS/Optimization#Optimization-Explain
-	Explain bool `bson:"$explain/c"`
+	Explain bool `bson:"$explain,omitempty"`
 
 	// Index hint specified by (key, direction) pairs. 
 	// See http://www.mongodb.org/display/DOCS/Optimization#Optimization-Hint
@@ -44,7 +44,7 @@ type QuerySpec struct {
 	// Snapshot mode assures that objects which update during the lifetime of a
 	// query are returned once and only once.
 	// See http://www.mongodb.org/display/DOCS/How+to+do+Snapshotted+Queries+in+the+Mongo+Database
-	Snapshot bool `bson:"$snapshot/c"`
+	Snapshot bool `bson:"$snapshot,omitempty"`
 
 	// Min and Max constrain matches to those having index keys between the min
 	// and max keys specified.The Min value is included in the range and the
@@ -204,7 +204,7 @@ func (q *Query) Cursor() (Cursor, error) {
 	return q.Conn.Find(q.Namespace, q.simplifyQuery(), &q.Options)
 }
 
-// Fill executes the query and copies up to len(slice) documents to output. The
+// Fill executes the query and copies up to len(slice) documents to slice. The
 // elements of slice must be valid document types (struct, map with string key)
 // or pointers to valid document types. The function returns the number of
 // documents in the result set.
@@ -225,6 +225,43 @@ func (q *Query) Fill(slice interface{}) (n int, err error) {
 		}
 	}
 	return i, nil
+}
+
+// All executes the query and returns the entire result set in *slicep. The
+// slicep argument must be a pointer to a slice and the elements of the slice
+// must be valid document types.
+func (q *Query) All(slicep interface{}) error {
+	pv := reflect.ValueOf(slicep)
+	if pv.Kind() != reflect.Ptr || pv.Elem().Kind() != reflect.Slice {
+		panic("slicep must be pointer to slice")
+	}
+
+	cursor, err := q.Conn.Find(q.Namespace, q.simplifyQuery(), &q.Options)
+	if err != nil {
+		return err
+	}
+	defer cursor.Close()
+
+	var pev reflect.Value
+	v := pv.Elem()
+	v = v.Slice(0, v.Cap())
+
+	i := 0
+	for ; cursor.HasNext(); i++ {
+		if i >= v.Len() {
+			// Grow slice by appending a zero value.
+			if !pev.IsValid() {
+				pev = reflect.New(v.Type().Elem())
+			}
+			v = reflect.Append(v, pev.Elem())
+			v = v.Slice(0, v.Cap())
+		}
+		if err := cursor.Next(v.Index(i)); err != nil {
+			return err
+		}
+	}
+	pv.Elem().Set(v.Slice(0, i))
+	return nil
 }
 
 // Explain returns an explanation of how the server will execute the query.

@@ -245,9 +245,9 @@ func kindName(kind int) string {
 }
 
 type fieldSpec struct {
-	name        string
-	index       []int
-	conditional bool
+	name      string
+	index     []int
+	omitEmpty bool
 }
 
 type structSpec struct {
@@ -274,15 +274,19 @@ func compileStructSpec(t reflect.Type, depth map[string]int, index []int, ss *st
 			}
 		default:
 			fs := &fieldSpec{name: f.Name}
-			p := strings.Split(f.Tag.Get("bson"), "/")
-			if len(p) > 0 {
+			tag := f.Tag.Get("bson")
+			if strings.Contains(tag, "/c") {
+				panic("use ,omitempty instead of /c in bson field tag")
+			}
+			p := strings.Split(tag, ",")
+			if len(p) > 0 && p[0] != "-" {
 				if len(p[0]) > 0 {
 					fs.name = p[0]
 				}
 				for _, s := range p[1:] {
 					switch s {
-					case "c":
-						fs.conditional = true
+					case "omitempty":
+						fs.omitEmpty = true
 					default:
 						panic(errors.New("bson: unknown field flag " + s + " for type " + t.Name()))
 					}

@@ -61,7 +61,7 @@ func TestQuery(t *testing.T) {
 	}
 }
 
-func TestFill(t *testing.T) {
+func TestFillAll(t *testing.T) {
 	c := dialAndDrop(t, "go-mongo-test", "test")
 	defer c.Conn.Close()
 
@@ -82,6 +82,20 @@ func TestFill(t *testing.T) {
 	}
 
 	for i, m := range p[:n] {
+		if m["x"] != i {
+			t.Fatalf("p[%d][x]=%v, want %i", i, m["x"], i)
+		}
+	}
+
+	p = nil
+	err = c.Find(nil).All(&p)
+	if err != nil {
+		t.Fatalf("all() = %v", err)
+	}
+	if len(p) != 10 {
+		t.Fatalf("len(p)=%d, want 10", n)
+	}
+	for i, m := range p {
 		if m["x"] != i {
 			t.Fatalf("p[%d][x]=%v, want %i", i, m["x"], i)
 		}
@@ -159,5 +173,16 @@ func TestFindAndModify(t *testing.T) {
 	err = c.Find(M{"_id": "users"}).One(&m)
 	if err != Done {
 		t.Fatal("findone, expect EOF, got", err)
+	}
+
+	err = c.Insert(M{"x": "string"})
+	if err != nil {
+		t.Fatal("insert(x: string)", err)
+	}
+
+	m = nil
+	err = c.Find(M{"x": "string"}).Update(M{"$inc": M{"x": 1}}, false, &m)
+	if err == nil {
+		t.Error("bad update did not return error")
 	}
 }

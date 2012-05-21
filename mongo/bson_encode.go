@@ -47,15 +47,15 @@ type encodeState struct {
 // Encode traverses the value doc recursively using the following
 // type-dependent encodings:
 //
-// Struct values encode as BSON documents. Each exported struct field becomes
-// an element of the document. By default the name of the document element is
-// the struct field name. If the struct field's tag has a "bson" key, that
-// value will be used as the element name.  For example, the field tag
-// `bson:"myName"` says to use "myName" as the element name. The following
-// options are supported in the "bson" key:
-///
-//  /c  If the field is the zero value, then the field is not 
-//      written to the encoding. 
+// Struct values encode as BSON documents. Each exported struct field is
+// written as a document element subject to comma separated options in the
+// "bson" struct field tag. The first option specifies the name of the document
+// element. If the name is "-", then the field is ignored. If the name is "",
+// then the name of the struct field is used as the name of the document
+// element. The remaining options are:
+//
+//  omitempty   If the field is the zero value, then the field is not 
+//              written to the encoding. 
 //
 // Anonymous struct fields are encoded in-line with the containing struct.
 //
@@ -203,7 +203,7 @@ func (e *encodeState) encodeValue(name string, fs *fieldSpec, v reflect.Value) {
 
 func encodeBool(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	b := v.Bool()
-	if b == false && fs.conditional {
+	if b == false && fs.omitEmpty {
 		return
 	}
 	e.writeKindName(kindBool, name)
@@ -216,7 +216,7 @@ func encodeBool(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 
 func encodeInt(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	i := v.Int()
-	if i == 0 && fs.conditional {
+	if i == 0 && fs.omitEmpty {
 		return
 	}
 	if i >= math.MinInt32 && i <= math.MaxInt32 {
@@ -230,7 +230,7 @@ func encodeInt(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 
 func encodeUint16(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	u := v.Uint()
-	if u == 0 && fs.conditional {
+	if u == 0 && fs.omitEmpty {
 		return
 	}
 	e.writeKindName(kindInt32, name)
@@ -239,7 +239,7 @@ func encodeUint16(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 
 func encodeUint(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	u := v.Uint()
-	if u == 0 && fs.conditional {
+	if u == 0 && fs.omitEmpty {
 		return
 	}
 	if int64(u) < 0 {
@@ -256,7 +256,7 @@ func encodeUint(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 
 func encodeInt32(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	i := v.Int()
-	if i == 0 && fs.conditional {
+	if i == 0 && fs.omitEmpty {
 		return
 	}
 	e.writeKindName(kindInt32, name)
@@ -265,7 +265,7 @@ func encodeInt32(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 
 func encodeInt64(e *encodeState, kind int, name string, fs *fieldSpec, v reflect.Value) {
 	i := v.Int()
-	if i == 0 && fs.conditional {
+	if i == 0 && fs.omitEmpty {
 		return
 	}
 	e.writeKindName(kind, name)
@@ -274,7 +274,7 @@ func encodeInt64(e *encodeState, kind int, name string, fs *fieldSpec, v reflect
 
 func encodeUint64(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	u := v.Uint()
-	if u == 0 && fs.conditional {
+	if u == 0 && fs.omitEmpty {
 		return
 	}
 	if int64(u) < 0 {
@@ -286,7 +286,7 @@ func encodeUint64(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 
 func encodeFloat(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	f := v.Float()
-	if f == 0 && fs.conditional {
+	if f == 0 && fs.omitEmpty {
 		return
 	}
 	e.writeKindName(kindFloat, name)
@@ -295,7 +295,7 @@ func encodeFloat(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 
 func encodeString(e *encodeState, kind int, name string, fs *fieldSpec, v reflect.Value) {
 	s := v.String()
-	if s == "" && fs.conditional {
+	if s == "" && fs.omitEmpty {
 		return
 	}
 	e.writeKindName(kind, name)
@@ -305,7 +305,7 @@ func encodeString(e *encodeState, kind int, name string, fs *fieldSpec, v reflec
 
 func encodeRegexp(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	r := v.Interface().(Regexp)
-	if r.Pattern == "" && fs.conditional {
+	if r.Pattern == "" && fs.omitEmpty {
 		return
 	}
 	e.writeKindName(kindRegexp, name)
@@ -336,7 +336,7 @@ func encodeBSONData(e *encodeState, name string, fs *fieldSpec, v reflect.Value)
 
 func encodeCodeWithScope(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	c := v.Interface().(CodeWithScope)
-	if c.Code == "" && c.Scope == nil && fs.conditional {
+	if c.Code == "" && c.Scope == nil && fs.omitEmpty {
 		return
 	}
 	e.writeKindName(kindCodeWithScope, name)
@@ -354,7 +354,7 @@ func encodeCodeWithScope(e *encodeState, name string, fs *fieldSpec, v reflect.V
 
 func encodeMinMax(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	i := v.Interface().(MinMax)
-	if i == 0 && fs.conditional {
+	if i == 0 && fs.omitEmpty {
 		return
 	}
 	switch v.Interface().(MinMax) {
@@ -369,7 +369,7 @@ func encodeMinMax(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 
 func encodeTime(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 	t := v.Interface().(time.Time)
-	if t.IsZero() && fs.conditional {
+	if t.IsZero() && fs.omitEmpty {
 		return
 	}
 	e.writeKindName(kindDateTime, name)

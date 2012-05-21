@@ -29,37 +29,37 @@ func testMap(value interface{}) map[string]interface{} {
 type stEmpty struct{}
 
 type stFloat32 struct {
-	Test float32 `bson:"test/c"`
+	Test float32 `bson:"test,omitempty"`
 }
 
 type stFloat64 struct {
-	Test float64 `bson:"test/c"`
+	Test float64 `bson:"test,omitempty"`
 }
 
 type stString struct {
-	Test string `bson:"test/c"`
+	Test string `bson:"test,omitempty"`
 }
 
 type stDoc struct {
-	Test map[string]interface{} `bson:"test/c"`
+	Test map[string]interface{} `bson:"test,omitempty"`
 }
 
 type stBinary struct {
-	Test []byte `bson:"test/c"`
+	Test []byte `bson:"test,omitempty"`
 }
 
 type myBytes []byte
 
 type stMyBytes struct {
-	Test myBytes `bson:"test/c"`
+	Test myBytes `bson:"test,omitempty"`
 }
 
 type stObjectId struct {
-	Test ObjectId `bson:"test/c"`
+	Test ObjectId `bson:"test,omitempty"`
 }
 
 type stBool struct {
-	Test bool `bson:"test/c"`
+	Test bool `bson:"test,omitempty"`
 }
 
 type ncBool struct {
@@ -67,88 +67,88 @@ type ncBool struct {
 }
 
 type stRegexp struct {
-	Test Regexp `bson:"test/c"`
+	Test Regexp `bson:"test,omitempty"`
 }
 
 type stSymbol struct {
-	Test Symbol `bson:"test/c"`
+	Test Symbol `bson:"test,omitempty"`
 }
 
 type stInt8 struct {
-	Test int8 `bson:"test/c"`
+	Test int8 `bson:"test,omitempty"`
 }
 
 type stInt16 struct {
-	Test int16 `bson:"test/c"`
+	Test int16 `bson:"test,omitempty"`
 }
 
 type stInt32 struct {
-	Test int32 `bson:"test/c"`
+	Test int32 `bson:"test,omitempty"`
 }
 
 type stInt struct {
-	Test int `bson:"test/c"`
+	Test int `bson:"test,omitempty"`
 }
 
 type stUint8 struct {
-	Test uint8 `bson:"test/c"`
+	Test uint8 `bson:"test,omitempty"`
 }
 
 type stUint16 struct {
-	Test uint16 `bson:"test/c"`
+	Test uint16 `bson:"test,omitempty"`
 }
 
 type stUint32 struct {
-	Test uint32 `bson:"test/c"`
+	Test uint32 `bson:"test,omitempty"`
 }
 
 type stUint64 struct {
-	Test uint64 `bson:"test/c"`
+	Test uint64 `bson:"test,omitempty"`
 }
 
 type stUint struct {
-	Test uint `bson:"test/c"`
+	Test uint `bson:"test,omitempty"`
 }
 
 type stInt64 struct {
-	Test int64 `bson:"test/c"`
+	Test int64 `bson:"test,omitempty"`
 }
 
 type stTime struct {
-	Test time.Time `bson:"test/c"`
+	Test time.Time `bson:"test,omitempty"`
 }
 
 type stTimestamp struct {
-	Test Timestamp `bson:"test/c"`
+	Test Timestamp `bson:"test,omitempty"`
 }
 
 type stMinMax struct {
-	Test MinMax `bson:"test/c"`
+	Test MinMax `bson:"test,omitempty"`
 }
 
 type stCodeWithScope struct {
-	Test CodeWithScope `bson:"test/c"`
+	Test CodeWithScope `bson:"test,omitempty"`
 }
 
 type stAny struct {
-	Test interface{} `bson:"test/c"`
+	Test interface{} `bson:"test,omitempty"`
 }
 
 type stStringSlice struct {
-	Test []string `bson:"test/c"`
+	Test []string `bson:"test,omitempty"`
 }
 
 type stStringArray struct {
-	Test [2]string `bson:"test/c"`
+	Test [2]string `bson:"test,omitempty"`
 }
 
 type stId struct {
-	Id   int `bson:"_id/c"`
-	Test int `bson:"test/c"`
+	Id   int `bson:"_id,omitempty"`
+	Test int `bson:"test,omitempty"`
 }
 
 type stEmbed struct {
-	Id int `bson:"_id/c"`
+	Id int `bson:"_id,omitempty"`
 	stInt32
 }
 
@@ -164,7 +164,7 @@ var bsonTests = []struct {
 	// data
 	data string
 }{
-	// Test conditional 
+	// Test omitempty 
 	{stFloat32{}, empty, empty, "\x05\x00\x00\x00\x00"},
 	{stFloat64{}, empty, empty, "\x05\x00\x00\x00\x00"},
 	{stString{}, empty, empty, "\x05\x00\x00\x00\x00"},
