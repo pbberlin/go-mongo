@@ -313,7 +313,7 @@ func decodeTime(d *decodeState, kind int, v reflect.Value) {
 		d.saveErrorAndSkip(kind, v.Type())
 		return
 	case kindDateTime:
-		v.Set(reflect.ValueOf(time.Unix(0, d.scanInt64()*int64(time.Millisecond))))
+		v.Set(reflect.ValueOf(timeFromMS(d.scanInt64())))
 	}
 }
 
@@ -579,7 +579,7 @@ func (d *decodeState) decodeValueInterface(kind int) interface{} {
 	case kindBool:
 		return d.scanBool()
 	case kindDateTime:
-		return time.Unix(0, d.scanInt64()*int64(time.Millisecond))
+		return timeFromMS(d.scanInt64())
 	case kindNull:
 		return nil
 	case kindSymbol:

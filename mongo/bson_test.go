@@ -377,10 +377,31 @@ var bsonTests = []struct {
 	},
 
 	{
-		stTime{time.Unix(0, 1168216211000*int64(time.Millisecond))},
-		testMap(time.Unix(0, 1168216211000*int64(time.Millisecond))),
-		testMap(time.Unix(0, 1168216211000*int64(time.Millisecond))),
-		"\x13\x00\x00\x00\ttest\x008\xbe\x1c\xff\x0f\x01\x00\x00\x00",
+		stTime{time.Date(1, 1, 1, 1, 1, 1, 0, time.UTC)},
+		testMap(time.Date(1, 1, 1, 1, 1, 1, 0, time.UTC)),
+		testMap(time.Date(1, 1, 1, 1, 1, 1, 0, time.UTC)),
+		"\x13\x00\x00\x00\ttest\x00\xc8\x04\x0b\xee|\xc7\xff\xff\x00",
+	},
+
+	{
+		stTime{time.Date(9999, 12, 31, 23, 59, 59, 999*1e6, time.UTC)},
+		testMap(time.Date(9999, 12, 31, 23, 59, 59, 999*1e6, time.UTC)),
+		testMap(time.Date(9999, 12, 31, 23, 59, 59, 999*1e6, time.UTC)),
+		"\x13\x00\x00\x00\ttest\x00\xff\xdb\x1f\xd2w\xe6\x00\x00\x00",
+	},
+
+	{
+		stTime{time.Date(1959, 6, 25, 12, 16, 59, 123*1e6, time.UTC)},
+		testMap(time.Date(1959, 6, 25, 12, 16, 59, 123*1e6, time.UTC)),
+		testMap(time.Date(1959, 6, 25, 12, 16, 59, 123*1e6, time.UTC)),
+		"\x13\x00\x00\x00\ttest\x00\xf3\xa6\xcb\xb3\xb2\xff\xff\xff\x00",
+	},
+
+	{
+		stTime{time.Date(2011, 6, 14, 10, 47, 53, 456*1e6, time.UTC)},
+		testMap(time.Date(2011, 6, 14, 10, 47, 53, 456*1e6, time.UTC)),
+		testMap(time.Date(2011, 6, 14, 10, 47, 53, 456*1e6, time.UTC)),
+		"\x13\x00\x00\x00\ttest\x00p\xbd\xc3\x8d0\x01\x00\x00\x00",
 	},
 
 	{

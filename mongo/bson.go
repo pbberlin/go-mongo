@@ -381,3 +381,11 @@ func handleAbort(err *error) {
 		}
 	}
 }
+
+func msFromTime(t time.Time) int64 {
+	return int64(t.Unix())*1e3 + int64(t.Nanosecond())/1e6
+}
+
+func timeFromMS(ms int64) time.Time {
+	return time.Unix(ms/1e3, (ms%1e3)*1e6).In(time.UTC)
+}

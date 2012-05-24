@@ -373,7 +373,7 @@ func encodeTime(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
 		return
 	}
 	e.writeKindName(kindDateTime, name)
-	e.WriteUint64(uint64(t.UnixNano() / int64(time.Millisecond)))
+	e.WriteUint64(uint64(msFromTime(t)))
 }
 
 func encodeStruct(e *encodeState, name string, fs *fieldSpec, v reflect.Value) {
