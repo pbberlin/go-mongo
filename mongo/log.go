@@ -20,7 +20,7 @@ import (
 	"log"
 )
 
-// NewLoggingConn returns logging wrapper around a connection.
+// NewLoggingConn returns a logging wrapper around a connection.
 func NewLoggingConn(conn Conn, log *log.Logger, prefix string) Conn {
 	if prefix != "" {
 		prefix = prefix + "."
