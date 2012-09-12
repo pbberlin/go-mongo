@@ -83,7 +83,7 @@ func TestFillAll(t *testing.T) {
 
 	for i, m := range p[:n] {
 		if m["x"] != i {
-			t.Fatalf("p[%d][x]=%v, want %i", i, m["x"], i)
+			t.Fatalf("p[%d][x]=%v, want %d", i, m["x"], i)
 		}
 	}
 
@@ -97,7 +97,7 @@ func TestFillAll(t *testing.T) {
 	}
 	for i, m := range p {
 		if m["x"] != i {
-			t.Fatalf("p[%d][x]=%v, want %i", i, m["x"], i)
+			t.Fatalf("p[%d][x]=%v, want %d", i, m["x"], i)
 		}
 	}
 }

@@ -33,21 +33,21 @@ func chapter1(conn mongo.Conn) {
 	// Create a collection object object for the "unicorns" collection. 
 	unicorns := db.C("unicorns")
 
-	log.Println("\n== Add first unicorn. ==\n")
+	log.Print("\n== Add first unicorn. ==\n\n")
 
 	err := unicorns.Insert(mongo.M{"name": "Aurora", "gender": "f", "weight": 450})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Println("\n== Find all unicorns. ==\n")
+	log.Print("\n== Find all unicorns. ==\n\n")
 
 	cursor, err := unicorns.Find(nil).Cursor()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Println("\n== Iterate over the documents in the result. ==\n")
+	log.Print("\n== Iterate over the documents in the result. ==\n\n")
 
 	for cursor.HasNext() {
 		var m mongo.M
@@ -57,7 +57,7 @@ func chapter1(conn mongo.Conn) {
 		}
 	}
 
-	log.Println("\n== Show index created on _id. ==\n")
+	log.Print("\n== Show index created on _id. ==\n\n")
 
 	si := db.C("system.indexes")
 	cursor, err = si.Find(nil).Cursor()
@@ -66,7 +66,7 @@ func chapter1(conn mongo.Conn) {
 	}
 	expectFieldValues(cursor, "name", "_id_")
 
-	log.Println("\n== Insert a totally different document in unicorns. ==\n")
+	log.Print("\n== Insert a totally different document in unicorns. ==\n\n")
 
 	err = unicorns.Insert(mongo.M{"name": "Leto", "gender": "m", "home": "Arrakeen", "worm": false})
 	if err != nil {
@@ -79,21 +79,21 @@ func chapter1(conn mongo.Conn) {
 	}
 	expectFieldValues(cursor, "name", "Aurora", "Leto")
 
-	log.Println("\n== Remove what we added to the database so far. ==\n")
+	log.Print("\n== Remove what we added to the database so far. ==\n\n")
 
 	err = unicorns.Remove(nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Println("\n== Add sample data for selector examples. ==\n")
+	log.Print("\n== Add sample data for selector examples. ==\n\n")
 
 	err = unicorns.Insert(chapter1SampleData...)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Println("\n== Find all male unicorns that weight 700 pounds. ==\n")
+	log.Print("\n== Find all male unicorns that weight 700 pounds. ==\n\n")
 
 	cursor, err = unicorns.Find(mongo.M{"gender": "m", "weight": mongo.M{"$gt": 700}}).Cursor()
 	if err != nil {
@@ -101,7 +101,7 @@ func chapter1(conn mongo.Conn) {
 	}
 	expectFieldValues(cursor, "name", "Unicrom", "Dunx")
 
-	log.Println("\n== A similar query for demonstration purposes. ==\n")
+	log.Print("\n== A similar query for demonstration purposes. ==\n\n")
 
 	cursor, err = unicorns.Find(mongo.M{"gender": mongo.M{"$ne": "f"}, "weight": mongo.M{"$gte": 701}}).Cursor()
 	if err != nil {
@@ -109,7 +109,7 @@ func chapter1(conn mongo.Conn) {
 	}
 	expectFieldValues(cursor, "name", "Unicrom", "Dunx")
 
-	log.Println("\n== Find unicorns without the vampires field. ==\n")
+	log.Print("\n== Find unicorns without the vampires field. ==\n\n")
 
 	cursor, err = unicorns.Find(mongo.M{"vampires": mongo.M{"$exists": false}}).Cursor()
 	if err != nil {
@@ -117,7 +117,7 @@ func chapter1(conn mongo.Conn) {
 	}
 	expectFieldValues(cursor, "name", "Nimue")
 
-	log.Println("\n== Find female unicorns which either love apples or oranges or weigh less than 500 lbs. ==\n")
+	log.Print("\n== Find female unicorns which either love apples or oranges or weigh less than 500 lbs. ==\n\n")
 
 	cursor, err = unicorns.Find(mongo.M{
 		"gender": "f",
@@ -139,14 +139,14 @@ func chapter2(conn mongo.Conn) {
 	unicorns := db.C("unicorns")
 	hits := db.C("hits")
 
-	log.Println("\n== Change Roooooodles' weight. ==\n")
+	log.Print("\n== Change Roooooodles' weight. ==\n\n")
 
 	err := unicorns.Update(mongo.M{"name": "Roooooodles"}, mongo.M{"weight": 590})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Println("\n== Update replaced the document. ==\n")
+	log.Print("\n== Update replaced the document. ==\n\n")
 
 	var m mongo.M
 	err = unicorns.Find(mongo.M{"name": "Roooooodles"}).One(&m)
@@ -154,7 +154,7 @@ func chapter2(conn mongo.Conn) {
 		log.Fatal(err)
 	}
 
-	log.Println("\n== Reset the lost fields using the set operator. ==\n")
+	log.Print("\n== Reset the lost fields using the set operator. ==\n\n")
 
 	err = unicorns.Update(mongo.M{"weight": 590}, mongo.M{"$set": mongo.M{
 		"name":     "Roooooodles",
@@ -176,7 +176,7 @@ func chapter2(conn mongo.Conn) {
 		log.Fatal("Did not find Roooooodles")
 	}
 
-	log.Println("\n== Update weight the correct way. ==\n")
+	log.Print("\n== Update weight the correct way. ==\n\n")
 
 	err = unicorns.Update(mongo.M{"name": "Roooooodles"}, mongo.M{"$set": mongo.M{"weight": 590}})
 	if err != nil {
@@ -193,7 +193,7 @@ func chapter2(conn mongo.Conn) {
 		log.Fatalf("Expected Roooooodles' weight=590, got %d\n", m["weight"])
 	}
 
-	log.Println("\n== Correct the kill count for Pilot. ==\n")
+	log.Print("\n== Correct the kill count for Pilot. ==\n\n")
 
 	err = unicorns.Update(mongo.M{"name": "Pilot"}, mongo.M{"$inc": mongo.M{"vampires": -2}})
 	if err != nil {
@@ -210,7 +210,7 @@ func chapter2(conn mongo.Conn) {
 		log.Fatalf("Expected Pilot's vampires=52, got %d\n", m["vampires"])
 	}
 
-	log.Println("\n== Aurora loves sugar. ==\n")
+	log.Print("\n== Aurora loves sugar. ==\n\n")
 
 	err = unicorns.Update(mongo.M{"name": "Aurora"}, mongo.M{"$push": mongo.M{"loves": "sugar"}})
 	if err != nil {
@@ -223,7 +223,7 @@ func chapter2(conn mongo.Conn) {
 		log.Fatal(err)
 	}
 
-	log.Println("\n== Updating a missing document does nothing. ==\n")
+	log.Print("\n== Updating a missing document does nothing. ==\n\n")
 
 	err = hits.Update(mongo.M{"page": "unicorns"}, mongo.M{"$inc": mongo.M{"hits": 1}})
 	if err == nil || err != mongo.ErrNotFound {
@@ -235,7 +235,7 @@ func chapter2(conn mongo.Conn) {
 		log.Fatal(err)
 	}
 
-	log.Println("\n== Upsert inserts the document if missing. ==\n")
+	log.Print("\n== Upsert inserts the document if missing. ==\n\n")
 
 	err = hits.Upsert(mongo.M{"page": "unicorns"}, mongo.M{"$inc": mongo.M{"hits": 1}})
 	if err != nil {
@@ -247,7 +247,7 @@ func chapter2(conn mongo.Conn) {
 		log.Fatal(err)
 	}
 
-	log.Println("\n== Upsert updates the document if already present. ==\n")
+	log.Print("\n== Upsert updates the document if already present. ==\n\n")
 
 	err = hits.Upsert(mongo.M{"page": "unicorns"}, mongo.M{"$inc": mongo.M{"hits": 1}})
 	if err != nil {
@@ -259,7 +259,7 @@ func chapter2(conn mongo.Conn) {
 		log.Fatal(err)
 	}
 
-	log.Println("\n== Update updates a single document. ==\n")
+	log.Print("\n== Update updates a single document. ==\n\n")
 
 	err = unicorns.Update(nil, mongo.M{"$set": mongo.M{"vaccinated": true}})
 	if err != nil {
@@ -272,7 +272,7 @@ func chapter2(conn mongo.Conn) {
 	}
 	expectCount(cursor, 1)
 
-	log.Println("\n== UpdateAll updates all documents. ==\n")
+	log.Print("\n== UpdateAll updates all documents. ==\n\n")
 
 	err = unicorns.UpdateAll(nil, mongo.M{"$set": mongo.M{"vaccinated": true}})
 	if err != nil {
@@ -294,7 +294,7 @@ func chapter3(conn mongo.Conn) {
 	db := mongo.Database{conn, "learn", mongo.DefaultLastErrorCmd}
 	unicorns := db.C("unicorns")
 
-	log.Println("\n== Find names of all unicorns. ==\n")
+	log.Print("\n== Find names of all unicorns. ==\n\n")
 
 	cursor, err := unicorns.Find(nil).Fields(mongo.M{"name": 1}).Cursor()
 	if err != nil {
@@ -302,7 +302,7 @@ func chapter3(conn mongo.Conn) {
 	}
 	expectCount(cursor, 12)
 
-	log.Println("\n== Find all unicorns ordered by decreasing weight. ==\n")
+	log.Print("\n== Find all unicorns ordered by decreasing weight. ==\n\n")
 
 	cursor, err = unicorns.Find(nil).Sort(mongo.D{{"weight", -1}}).Cursor()
 	if err != nil {
@@ -310,7 +310,7 @@ func chapter3(conn mongo.Conn) {
 	}
 	expectCount(cursor, 12)
 
-	log.Println("\n== Find all unicorns ordered by name and then vampire kills. ==\n")
+	log.Print("\n== Find all unicorns ordered by name and then vampire kills. ==\n\n")
 
 	cursor, err = unicorns.Find(nil).Sort(mongo.D{{"name", 1}, {"vampires", -1}}).Cursor()
 	if err != nil {
@@ -318,7 +318,7 @@ func chapter3(conn mongo.Conn) {
 	}
 	expectCount(cursor, 12)
 
-	log.Println("\n== Find the 2nd and 3rd heaviest unicorns. ==\n")
+	log.Print("\n== Find the 2nd and 3rd heaviest unicorns. ==\n\n")
 
 	cursor, err = unicorns.Find(nil).Sort(mongo.D{{"weight", -1}}).Limit(2).Skip(1).Cursor()
 	if err != nil {
@@ -326,7 +326,7 @@ func chapter3(conn mongo.Conn) {
 	}
 	expectCount(cursor, 2)
 
-	log.Println("\n== Count unicorns with more than 50 kills. ==\n")
+	log.Print("\n== Count unicorns with more than 50 kills. ==\n\n")
 
 	n, err := unicorns.Find(mongo.M{"vampires": mongo.M{"$gt": 50}}).Count()
 	if err != nil {
@@ -345,14 +345,14 @@ func chapter7(conn mongo.Conn) {
 	db := mongo.Database{conn, "learn", mongo.DefaultLastErrorCmd}
 	unicorns := db.C("unicorns")
 
-	log.Println("\n== Create index on name. ==\n")
+	log.Print("\n== Create index on name. ==\n\n")
 
 	err := unicorns.CreateIndex(mongo.D{{"name", 1}}, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Println("\n== Drop index on name. ==\n")
+	log.Print("\n== Drop index on name. ==\n\n")
 
 	err = db.Run(mongo.D{
 		{"dropIndexes", unicorns.Name()},
@@ -362,21 +362,21 @@ func chapter7(conn mongo.Conn) {
 		log.Fatal(err)
 	}
 
-	log.Println("\n== Create unique index on name. ==\n")
+	log.Print("\n== Create unique index on name. ==\n\n")
 
 	err = unicorns.CreateIndex(mongo.D{{"name", 1}}, &mongo.IndexOptions{Unique: true})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Println("\n== Create compound index on name ascending and kills descending. ==\n")
+	log.Print("\n== Create compound index on name ascending and kills descending. ==\n\n")
 
 	err = unicorns.CreateIndex(mongo.D{{"name", 1}, {"vampires", -1}}, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Println("\n== Explain query. ==\n")
+	log.Print("\n== Explain query. ==\n\n")
 
 	var m mongo.M
 	err = unicorns.Find(nil).Explain(&m)
@@ -384,7 +384,7 @@ func chapter7(conn mongo.Conn) {
 		log.Fatal(err)
 	}
 
-	log.Println("\n== Explain query on name. ==\n")
+	log.Print("\n== Explain query on name. ==\n\n")
 
 	m = nil
 	err = unicorns.Find(mongo.M{"name": "Pilot"}).Explain(&m)
@@ -392,14 +392,14 @@ func chapter7(conn mongo.Conn) {
 		log.Fatal(err)
 	}
 
-	log.Println("\n== Enable profiling. ==\n")
+	log.Print("\n== Enable profiling. ==\n\n")
 
 	err = db.Run(mongo.D{{"profile", 2}}, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Println("\n== Get profile data for query. ==\n")
+	log.Print("\n== Get profile data for query. ==\n\n")
 
 	cursor, err := unicorns.Find(mongo.M{"weight": mongo.M{"$gt": 600}}).Cursor()
 	if err != nil {
@@ -421,7 +421,7 @@ func chapter7(conn mongo.Conn) {
 	}
 	cursor.Close()
 
-	log.Println("\n== Profile queries that take longer than 100 ms. ==\n")
+	log.Print("\n== Profile queries that take longer than 100 ms. ==\n\n")
 
 	err = db.Run(mongo.D{{"profile", 2}, {"slowms", 100}}, nil)
 	if err != nil {
@@ -480,7 +480,7 @@ func dateTime(year, month, day, hour, minutes int) time.Time {
 
 // reset cleans up after previous runs of this applications.
 func reset(conn mongo.Conn) {
-	log.Println("\n== Clear documents and indexes created by previous run. ==\n")
+	log.Print("\n== Clear documents and indexes created by previous run. ==\n\n")
 	db := mongo.Database{conn, "learn", mongo.DefaultLastErrorCmd}
 	db.Run(mongo.D{{"profile", 0}}, nil)
 	db.C("unicorns").Remove(nil)
