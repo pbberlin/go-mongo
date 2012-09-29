@@ -1,7 +1,7 @@
 Go-Mongo
 ========
 
-Go-Mongo is a [MongoDB](http://www..mongodb.org/) driver for the
+Go-Mongo is a [MongoDB](http://www.mongodb.org/) driver for the
 [Go](http://golang.org) programming language.
 
 Go-Mongo is designed to be used with mongos in production environments. If you
