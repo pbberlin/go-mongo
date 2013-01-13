@@ -655,7 +655,7 @@ func TestObjectIdUnmarshalJSON(t *testing.T) {
 		t.Errorf("UnmarshalJSON returned %q", err)
 	}
 	if outputId != id {
-		t.Errorf("id.MarshalJSON() = %v, want %v", outputId, id)
+		t.Errorf("id.UnmarshalJSON() = %v, want %v", outputId, id)
 	}
 }
 
