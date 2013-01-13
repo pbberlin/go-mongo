@@ -632,6 +632,33 @@ func TestObjectId(t *testing.T) {
 	}
 }
 
+func TestObjectIdMarshalJSON(t *testing.T) {
+	jsonId := "\"4c9b8fb4a382aafe17c86e63\""
+	id, _ := NewObjectIdHex(jsonId[1:25])
+
+	jsonOutput, err := id.MarshalJSON()
+	if err != nil {
+		t.Errorf("MarshalJSON returned %q", err)
+	}
+	if !bytes.Equal(jsonOutput, []byte(jsonId)) {
+		t.Errorf("id.MarshalJSON() = %v, want %v", string(jsonOutput), jsonId)
+	}
+}
+
+func TestObjectIdUnmarshalJSON(t *testing.T) {
+	jsonId := "\"4c9b8fb4a382aafe17c86e63\""
+	id, _ := NewObjectIdHex(jsonId[1:25])
+
+	var outputId ObjectId
+	err := outputId.UnmarshalJSON([]byte(jsonId))
+	if err != nil {
+		t.Errorf("UnmarshalJSON returned %q", err)
+	}
+	if outputId != id {
+		t.Errorf("id.MarshalJSON() = %v, want %v", outputId, id)
+	}
+}
+
 func TestBadDecodeResults(t *testing.T) {
 	empty := []byte("\x05\x00\x00\x00\x00")
 

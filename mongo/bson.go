@@ -20,6 +20,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -64,6 +65,16 @@ func (id ObjectId) String() string {
 // MarshalJSON returns the JSON encoding of id.
 func (id ObjectId) MarshalJSON() ([]byte, error) {
 	return json.Marshal(id.String())
+}
+
+// UnmarshalJSON decodes id from JSON to ObjectId.
+func (id *ObjectId) UnmarshalJSON(data []byte) error {
+	if len(data) != 26 || data[0] != '"' || data[25] != '"' {
+		return fmt.Errorf("mongo: invalid ObjectId in JSON: %q", data)
+	}
+	var err error
+	*id, err = NewObjectIdHex(string(data[1:25]))
+	return err
 }
 
 func newObjectId(t time.Time, c uint64) ObjectId {
