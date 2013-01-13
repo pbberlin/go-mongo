@@ -18,6 +18,7 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"reflect"
 	"strconv"
@@ -58,6 +59,11 @@ type ObjectId string
 // NewObjectIdHex to convert the string back to an object id.
 func (id ObjectId) String() string {
 	return hex.EncodeToString([]byte(string(id)))
+}
+
+// MarshalJSON returns the JSON encoding of id.
+func (id ObjectId) MarshalJSON() ([]byte, error) {
+	return json.Marshal(id.String())
 }
 
 func newObjectId(t time.Time, c uint64) ObjectId {
