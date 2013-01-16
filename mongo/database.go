@@ -48,7 +48,7 @@ func (e *MongoError) Error() string {
 }
 
 // CommandResponse contains the common fields in command responses from the
-// server. 
+// server.
 type CommandResponse struct {
 	Ok     bool   `bson:"ok"`
 	Errmsg string `bson:"errmsg"`
@@ -101,7 +101,7 @@ func runInternal(conn Conn, dbname string, cmd interface{}, options *FindOptions
 }
 
 // Run runs the command cmd on the database.
-// 
+//
 // More information: http://www.mongodb.org/display/DOCS/Commands
 func (db Database) Run(cmd interface{}, result interface{}) error {
 	var d BSONData
@@ -148,9 +148,9 @@ func (db Database) LastError(cmd interface{}) (*MongoError, error) {
 }
 
 // DBRef is a reference to a document in a database. Use the Database
-// Dereference method to get the referenced document. 
+// Dereference method to get the referenced document.
 //
-// More information: http://www.mongodb.org/display/DOCS/Database+References 
+// More information: http://www.mongodb.org/display/DOCS/Database+References
 type DBRef struct {
 	// The target document's collection.
 	Collection string `bson:"$ref"`

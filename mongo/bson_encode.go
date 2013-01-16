@@ -54,8 +54,8 @@ type encodeState struct {
 // then the name of the struct field is used as the name of the document
 // element. The remaining options are:
 //
-//  omitempty   If the field is the zero value, then the field is not 
-//              written to the encoding. 
+//  omitempty   If the field is the zero value, then the field is not
+//              written to the encoding.
 //
 // Anonymous struct fields are encoded in-line with the containing struct.
 //
@@ -64,10 +64,10 @@ type encodeState struct {
 // Map values encode as BSON documents. The map's key type must be string; the
 // object keys are used directly as map keys.
 //
-// Pointer values encode as the value pointed to. 
+// Pointer values encode as the value pointed to.
 //
-// Interface values encode as the value contained in the interface. 
-// 
+// Interface values encode as the value contained in the interface.
+//
 // Other types are encoded as follows
 //
 //      Go                  -> BSON

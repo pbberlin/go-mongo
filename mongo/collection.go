@@ -36,7 +36,7 @@ type Collection struct {
 	Conn Conn
 
 	// String with the format "<database>.<collection>" where <database> is the
-	// name of the database and <collection> is the name of the collection. 
+	// name of the database and <collection> is the name of the collection.
 	Namespace string
 
 	// Command used to check for errors after on insert, update or remove
@@ -97,7 +97,7 @@ func (c Collection) UpdateAll(selector interface{}, update interface{}) error {
 	return err
 }
 
-// Upsert updates the first document found by selector with update. If no 
+// Upsert updates the first document found by selector with update. If no
 // document is found, then the update is inserted instead.
 func (c Collection) Upsert(selector interface{}, update interface{}) error {
 	_, err := c.checkError(c.Conn.Update(c.Namespace, selector, update, upsertOptions))
@@ -116,7 +116,7 @@ func (c Collection) Remove(selector interface{}) error {
 	return err
 }
 
-// Find returns a query object for the given filter. 
+// Find returns a query object for the given filter.
 func (c Collection) Find(filter interface{}) *Query {
 	if filter == nil {
 		filter = emptyDoc
@@ -175,7 +175,7 @@ type IndexOptions struct {
 }
 
 // CreateIndex creates an index on keys.
-// 
+//
 // More information: http://www.mongodb.org/display/DOCS/Indexes
 func (c Collection) CreateIndex(keys D, options *IndexOptions) error {
 	index := struct {

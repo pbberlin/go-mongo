@@ -22,7 +22,7 @@ package mongo
 //
 //      var server string           // host:port of server
 //      var name, password string   // authentication credentials
-//  
+//
 //      ...
 //
 //      pool = mongo.NewPool(func () (c mongo.Conn, err os.Error) {

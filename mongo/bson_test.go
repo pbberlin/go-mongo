@@ -164,7 +164,7 @@ var bsonTests = []struct {
 	// data
 	data string
 }{
-	// Test omitempty 
+	// Test omitempty
 	{stFloat32{}, empty, empty, "\x05\x00\x00\x00\x00"},
 	{stFloat64{}, empty, empty, "\x05\x00\x00\x00\x00"},
 	{stString{}, empty, empty, "\x05\x00\x00\x00\x00"},

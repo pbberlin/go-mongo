@@ -219,7 +219,7 @@ func (d *decodeState) decodeValue(kind int, v reflect.Value) {
 }
 
 // indirect walks down v allocating pointers as needed, until it gets to a
-// non-pointer.  
+// non-pointer.
 func (d *decodeState) indirect(v reflect.Value) reflect.Value {
 	for {
 		if v.Kind() == reflect.Interface && !v.IsNil() {

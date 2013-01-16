@@ -53,7 +53,7 @@ type Regexp struct {
 	Options string
 }
 
-// ObjectId represents a BSON object identifier. 
+// ObjectId represents a BSON object identifier.
 type ObjectId string
 
 // String returns the hexadecimal encoding of id. Use the function
@@ -98,11 +98,11 @@ func newObjectId(t time.Time, c uint64) ObjectId {
 // NewObjectId returns a new object id. This function uses the following format
 // for object ids:
 //
-//  [0:4]  Big endian time since epoch in seconds. This is compatible 
+//  [0:4]  Big endian time since epoch in seconds. This is compatible
 //         with other drivers.
-// 
+//
 //  [4:12] Incrementing counter initialized with cryptographic random number.
-//          This ensures that object ids are unique, but is simpler than 
+//          This ensures that object ids are unique, but is simpler than
 //          the format used by other drivers.
 func NewObjectId() ObjectId {
 	return newObjectId(time.Now(), nextOidCounter())
@@ -166,7 +166,7 @@ type BSONData struct {
 }
 
 // Deocde decodes bd to v. See the Decode function for more information about
-// BSON decoding. 
+// BSON decoding.
 func (bd BSONData) Decode(v interface{}) error {
 	return decodeInternal(bd.Kind, bd.Data, v)
 }
@@ -284,7 +284,7 @@ func compileStructSpec(t reflect.Type, depth map[string]int, index []int, ss *st
 		case f.PkgPath != "":
 			// Ignore unexported fields.
 		case f.Anonymous:
-			// TODO: Handle pointers. Requires change to decoder and 
+			// TODO: Handle pointers. Requires change to decoder and
 			// protection against infinite recursion.
 			if f.Type.Kind() == reflect.Struct {
 				compileStructSpec(f.Type, depth, append(index, i), ss)

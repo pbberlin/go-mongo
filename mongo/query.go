@@ -16,7 +16,7 @@ package mongo
 
 import "reflect"
 
-// Query represents a query to the database. 
+// Query represents a query to the database.
 type Query struct {
 	Conn      Conn
 	Namespace string
@@ -37,7 +37,7 @@ type QuerySpec struct {
 	// See http://www.mongodb.org/display/DOCS/Optimization#Optimization-Explain
 	Explain bool `bson:"$explain,omitempty"`
 
-	// Index hint specified by (key, direction) pairs. 
+	// Index hint specified by (key, direction) pairs.
 	// See http://www.mongodb.org/display/DOCS/Optimization#Optimization-Hint
 	Hint interface{} `bson:"$hint"`
 
@@ -97,7 +97,7 @@ func (q *Query) BatchSize(batchSize int) *Query {
 
 // Fields limits the fields in the returned documents. Fields contains one or
 // more elements, each of which is the name of a field that should be returned,
-// and the integer value 1. 
+// and the integer value 1.
 //
 // More information: http://www.mongodb.org/display/DOCS/Retrieving+a+Subset+of+Fields
 func (q *Query) Fields(fields interface{}) *Query {
@@ -123,7 +123,7 @@ func (q *Query) PartialResults(ok bool) *Query {
 // Exhaust specifies if the server should stream data to the client full blast.
 // Normally the server waits for a "get more" message before sending a batch of
 // data to the client.  With this option set, the server sends batches of data
-// without waiting for the "get more" messages. 
+// without waiting for the "get more" messages.
 func (q *Query) Exhaust(exhaust bool) *Query {
 	q.Options.Exhaust = exhaust
 	return q
@@ -131,7 +131,7 @@ func (q *Query) Exhaust(exhaust bool) *Query {
 
 // Tailable specifies if the server should not close the cursor when no more
 // data is available.
-// 
+//
 // More information: http://www.mongodb.org/display/DOCS/Tailable+Cursors
 func (q *Query) Tailable(tailable bool) *Query {
 	q.Options.Tailable = tailable
@@ -173,7 +173,7 @@ func (q *Query) Count() (int64, error) {
 	return r.N, r.Err()
 }
 
-// simplifyQuery returns the simplest representation of the query. 
+// simplifyQuery returns the simplest representation of the query.
 func (q *Query) simplifyQuery() interface{} {
 	if q.Spec.Sort == nil &&
 		q.Spec.Explain == false &&
@@ -186,7 +186,7 @@ func (q *Query) simplifyQuery() interface{} {
 	return &q.Spec
 }
 
-// One executes the query and returns the first result. 
+// One executes the query and returns the first result.
 func (q *Query) One(output interface{}) error {
 	q.Options.Limit = 1
 	q.Options.BatchSize = -1
