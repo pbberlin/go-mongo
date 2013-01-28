@@ -27,10 +27,10 @@ func chapter1(conn mongo.Conn) {
 
 	log.Println("\n== CHAPTER 1 ==")
 
-	// Create a database object. 
+	// Create a database object.
 	db := mongo.Database{conn, "learn", mongo.DefaultLastErrorCmd}
 
-	// Create a collection object object for the "unicorns" collection. 
+	// Create a collection object object for the "unicorns" collection.
 	unicorns := db.C("unicorns")
 
 	log.Print("\n== Add first unicorn. ==\n\n")
