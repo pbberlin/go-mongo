@@ -138,6 +138,13 @@ func (q *Query) Tailable(tailable bool) *Query {
 	return q
 }
 
+func (q *Query) AwaitData(awaitdata bool) *Query {
+	q.Options.AwaitData = awaitdata
+	return q
+}
+
+
+
 // commandOptions returns copy of options with values set appropriately for
 // running a command.
 func commandOptions(options *FindOptions) *FindOptions {
