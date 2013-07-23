@@ -468,6 +468,16 @@ func (c *connection) receive() error {
 	return c.err
 }
 
+/*
+	According to the documentation of tailable cursors 
+	at http://docs.mongodb.org/manual/tutorial/create-tailable-cursor/
+	tailable cursors may become "dead" - which amounts to cursor.cursorId == 0
+	We might want to check this "dead" condition.
+*/
+func (r *cursor) GetId() uint64 {
+	return r.cursorId
+}
+
 func (r *cursor) numberToReturn() uint32 {
 	batchSize := r.batchSize
 	if batchSize < 0 {
@@ -530,6 +540,8 @@ func (r *cursor) fatal(err error) error {
 func (r *cursor) Err() error {
 	return r.err
 }
+
+
 
 func (r *cursor) HasNext() bool {
 	// If HasNext() dectects an error other than EOF, then HasNext returns true
