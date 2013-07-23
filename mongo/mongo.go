@@ -164,4 +164,6 @@ type Cursor interface {
 	// Next fetches the next document from the cursor. Value must be a map or
 	// a non-nil pointer to struct or map.
 	Next(value interface{}) error
+	
+	GetId() uint64
 }
